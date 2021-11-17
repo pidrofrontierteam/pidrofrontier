@@ -47,17 +47,24 @@ public class Card : MonoBehaviour
     private Suit playedSuit;
     [SerializeField]
     private Sprite[] spriteArray;
+    private bool isDragged;
+    private Vector3 mousePos;
+    private Vector3 dragOffset;
+    private float dragSpeed = 30f;
 
     private SpriteRenderer spriteRenderer;
+    private Camera cam;
 
     public void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        cam = Camera.main;
     }
 
     public void Start()
     {
-        spriteArray = Resources.LoadAll<Sprite>("CardSpriteSheet");
+        
+        spriteArray = Resources.LoadAll<Sprite>("English_pattern_playing_cards_deck");
         switch (rank)
         {
             case Rank.Two:
@@ -129,10 +136,10 @@ public class Card : MonoBehaviour
 
         switch (suit)
         {
-            case Suit.Hearts:
+            case Suit.Spades:
                 spriteRenderer.sprite = spriteArray[spriteIndex];
                 break;
-            case Suit.Clubs:
+            case Suit.Hearts:
                 spriteIndex += 13;
                 spriteRenderer.sprite = spriteArray[spriteIndex];
                 break;
@@ -140,11 +147,20 @@ public class Card : MonoBehaviour
                 spriteIndex += 26;
                 spriteRenderer.sprite = spriteArray[spriteIndex];
                 break;
-            case Suit.Spades:
+            case Suit.Clubs:
                 spriteIndex += 39;
                 spriteRenderer.sprite = spriteArray[spriteIndex];
                 break;
         }
+    }
+
+    void Update()
+    {
+        // if(isDragged == true)
+        // {
+        //     transform.position =  new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+        //     print("dragged");
+        // }
     }
 
     public int GetRank()
@@ -162,6 +178,20 @@ public class Card : MonoBehaviour
         return isPidro;
     }
 
+    private void OnMouseDown()
+    {
+        dragOffset = transform.position - GetMousePos();
+    }
 
+    public void OnMouseDrag()
+    {
+        transform.position = Vector3.MoveTowards(transform.position, GetMousePos() + dragOffset, dragSpeed * Time.deltaTime);
+    }
 
+    private Vector3 GetMousePos()
+    {
+        var mousePos = cam.ScreenToWorldPoint(Input.mousePosition);
+        mousePos.z = 0;
+        return mousePos;
+    }
 }
