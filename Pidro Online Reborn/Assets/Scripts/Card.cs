@@ -50,6 +50,7 @@ public class Card : MonoBehaviour
     [SerializeField] private bool isPidro = false;  // Fives
     [SerializeField] private bool isDeuce = false;  // Twos
     private bool isOverdropZone;
+    private bool isOverHand;
 
     [SerializeField] private Vector2 startPosition;
 
@@ -57,6 +58,7 @@ public class Card : MonoBehaviour
     [SerializeField] private GameObject DropZone;
     private GameObject startParent;
     private GameObject dropZone;
+    private GameObject hand;
     
 
     private Vector3 mousePos;
@@ -194,8 +196,12 @@ public class Card : MonoBehaviour
     {
         if (isOverdropZone)
         {
-            transform.SetParent(DropZone.transform, false);
+            transform.SetParent(dropZone.transform, false);
         }
+        else if (isOverHand)
+        {
+            transform.SetParent(hand.transform, false);
+        } 
         else 
         {
             transform.position = startPosition;
@@ -210,6 +216,48 @@ public class Card : MonoBehaviour
         return mousePos;
     }
 
+    #endregion
+
+    #region collisions
+
+    private void OnTriggerEnter2D(Collider2D collider)
+    {
+        if(collider.gameObject.tag == "DropZone")
+        {
+            isOverdropZone = true;
+            dropZone = collider.gameObject;
+            dropZone.GetComponent<DropZone>().AddCardToList(gameObject);
+        } 
+        else if(collider.gameObject.tag == "Hand") 
+        {
+            isOverHand = true;
+            hand = collider.gameObject;
+            hand.GetComponent<DropZone>().AddCardToList(gameObject);
+        }
+        
+    }
+
+    private void OnTriggerExit2D(Collider2D collider)
+    {
+        if(collider.gameObject.tag == "DropZone")
+        {
+            isOverdropZone = false;
+            if(dropZone != null)
+            {
+                dropZone.GetComponent<DropZone>().RemoveCardFromList(gameObject);
+                dropZone = null;
+            }
+        } 
+        else if(collider.gameObject.tag == "Hand") 
+        {
+            isOverHand = false;
+            if(hand != null) 
+            {
+                hand.GetComponent<DropZone>().RemoveCardFromList(gameObject);
+                hand = null;
+            }
+        }
+    }
 
     #endregion
 

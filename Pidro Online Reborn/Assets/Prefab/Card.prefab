@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 8248516512671124265}
   - component: {fileID: 8248516512671124271}
   - component: {fileID: 6248414701206298242}
-  m_Layer: 0
+  - component: {fileID: -449353337861133417}
+  m_Layer: 6
   m_Name: Card
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -61,6 +62,9 @@ MonoBehaviour:
   dragSpeed: 100
   isPidro: 0
   isDeuce: 0
+  startPosition: {x: 0, y: 0}
+  Canvas: {fileID: 0}
+  DropZone: {fileID: 0}
 --- !u!212 &8248516512671124271
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -137,5 +141,26 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.8105658, y: 2.7099998}
+  m_Size: {x: 1.8, y: 2.7}
   m_EdgeRadius: 0
+--- !u!50 &-449353337861133417
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248516512671124264}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 7
