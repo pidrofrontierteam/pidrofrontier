@@ -9,10 +9,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 463303587330277957}
-  - component: {fileID: 8248516512671124265}
   - component: {fileID: 8248516512671124271}
   - component: {fileID: 6248414701206298242}
   - component: {fileID: -449353337861133417}
+  - component: {fileID: 2478858362463254340}
+  - component: {fileID: 3640597458324683336}
   m_Layer: 6
   m_Name: Card
   m_TagString: Untagged
@@ -40,31 +41,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1.8105658, y: 2.7099998}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &8248516512671124265
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8248516512671124264}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fc2c2fdbf5195849ade4b9fcaef9fe6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rank: 0
-  suit: 0
-  playedSuit: 0
-  spriteArray: []
-  rankAsInt: 0
-  spriteIndex: 0
-  points: 0
-  dragSpeed: 100
-  isPidro: 0
-  isDeuce: 0
-  startPosition: {x: 0, y: 0}
-  Canvas: {fileID: 0}
-  DropZone: {fileID: 0}
 --- !u!212 &8248516512671124271
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -106,7 +82,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 2060290821, guid: 27e39ad8d6643aa4ea14bb73f584415c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: be4146c9013b73a4982b3cb096aaa793, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -134,7 +110,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.8105658, y: 2.7099998}
+    oldSize: {x: 1.8, y: 2.7}
     newSize: {x: 1.8105658, y: 2.7099998}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -164,3 +140,34 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 7
+--- !u!114 &2478858362463254340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248516512671124264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dbd91d33aa087f4aa824ce673107c12, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cardFace: {fileID: 0}
+  cardBack: {fileID: 21300000, guid: be4146c9013b73a4982b3cb096aaa793, type: 3}
+--- !u!114 &3640597458324683336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8248516512671124264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ba4c6c529cf22c4682d0839d6aa4c84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  faceUp: 0
+  startPosition: {x: 0, y: 0}
+  Canvas: {fileID: 0}
+  DropZone: {fileID: 0}
+  dragSpeed: 30
