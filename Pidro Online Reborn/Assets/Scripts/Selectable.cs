@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class Selectable : MonoBehaviour
 {
@@ -23,6 +24,8 @@ public class Selectable : MonoBehaviour
 
     private Camera cam;
 
+    public Pidro pidro;
+
 
     // Awake is called when the script instance is being loaded
     public void Awake()
@@ -30,6 +33,8 @@ public class Selectable : MonoBehaviour
         cam = Camera.main;
         Canvas = GameObject.Find("Main Canvas");
         DropZone = GameObject.Find("PlayerDropZone");
+        pidro = GameObject.Find("GameManager").GetComponent<Pidro>();
+
     }
 
     // Start is called before the first frame update
@@ -44,8 +49,8 @@ public class Selectable : MonoBehaviour
         
     }
 
+    // Manages click and dragging card gameobjects between hand and field, as well as the corresponding lists
     #region Mouse Input
-
 
     private void OnMouseDown()
     {
@@ -63,13 +68,29 @@ public class Selectable : MonoBehaviour
 
     private void OnMouseUp()
     {
+        // Checks whether the cursor is above the drop zone (field) when released, if so it puts the card gameobject into the drop zone and manages the string lists
         if (isOverdropZone)
         {
             transform.SetParent(dropZone.transform, false);
+
+            // Checks whether card is already in the field
+            string result = pidro.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
+            if (result == null)
+            {
+                pidro.MoveCardBetweenStringLists(transform.gameObject.name, pidro.currentPlayer_hand, pidro.currentPlayer_field);
+            }
         }
+        // Checks whether the cursor is above the hand when released, if so it puts the card gameobject into the hand and manages the string lists
         else if (isOverHand)
         {
             transform.SetParent(hand.transform, false);
+
+            // Checks whether card is already in the hand
+            string result = pidro.currentPlayer_hand.FirstOrDefault(s => s.Contains(transform.gameObject.name));
+            if (result == null)
+            {
+                pidro.MoveCardBetweenStringLists(transform.gameObject.name, pidro.currentPlayer_field, pidro.currentPlayer_hand);
+            }
         } 
         else 
         {
@@ -88,6 +109,8 @@ public class Selectable : MonoBehaviour
 
     #endregion
 
+
+    // Detection for moving the card gameobject between the hand and the drop zone
     #region collisions
 
     private void OnTriggerEnter2D(Collider2D collider)
@@ -97,16 +120,18 @@ public class Selectable : MonoBehaviour
             isOverdropZone = true;
             dropZone = collider.gameObject;
             dropZone.GetComponent<DropZone>().AddCardToList(gameObject);
+            
+            
         } 
         else if(collider.gameObject.tag == "Hand") 
         {
             isOverHand = true;
             hand = collider.gameObject;
             hand.GetComponent<DropZone>().AddCardToList(gameObject);
+
         }
         
     }
-
     private void OnTriggerExit2D(Collider2D collider)
     {
         if(collider.gameObject.tag == "DropZone")

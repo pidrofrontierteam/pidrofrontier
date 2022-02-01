@@ -10,6 +10,7 @@ public class DropZone : MonoBehaviour
     The dropzone has a list which grows and shrinks as gameobjects are added to it. 
     Whenever the list updates, the sorting order does too. The first element in the list is lower in the sorting order.
     */
+
     public void AddCardToList(GameObject gameObject)
     {
         cards.Add(gameObject);

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class Pidro : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class Pidro : MonoBehaviour
     public static string[] suits = new string[] {"Spades", "Hearts", "Diamonds", "Clubs"};
     public static string[] values = new string[] {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
 
+    
+
     private List<string> player1_hand = new List<string>();
     private List<string> player2_hand = new List<string>();
     private List<string> player3_hand = new List<string>();
@@ -22,20 +25,18 @@ public class Pidro : MonoBehaviour
     private List<string> player3_field = new List<string>();
     private List<string> player4_field = new List<string>();
 
-    private List<string> discard = new List<string>();
+
+
+    public List<string> discard = new List<string>();
     
     public List<string> deck;
 
+    public List<string> currentPlayer_hand;
+    public List<string> currentPlayer_field;
+
     public void PlayCards()
     {
-        deck = GenerateDeck();
-        Shuffle(deck);
-        // foreach (string card in deck)
-        // {
-        //     print(card);
-        // }
-        //PidroDeal();
-        FrankensteinDeal();
+        DealCards(currentPlayer_hand);
     }
 
     // Start is called before the first frame update
@@ -43,13 +44,19 @@ public class Pidro : MonoBehaviour
     {
         cardFaces = Resources.LoadAll<Sprite>("English_pattern_playing_cards_deck");
 
-        PlayCards();
+        // PlayCards();
+        deck = GenerateDeck();
+        Shuffle(deck);
+
+        // for DEBUG: sets current hand and field
+        currentPlayer_hand = player1_hand;
+        currentPlayer_field = player1_field;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
 
@@ -80,6 +87,7 @@ public class Pidro : MonoBehaviour
         }
     }
 
+    // Deprecated but used for reference
     void PidroDeal()
     {
         float yOffset = 0;
@@ -95,10 +103,16 @@ public class Pidro : MonoBehaviour
         }
     }
 
-    void FrankensteinDeal()
+    void DealCards(List<string> hand)
     {
-        int i = 0;
-        foreach (string card in deck)
+
+        for (int i = 0; i < 9; i++)
+        {
+            hand.Add(deck.Last<string>());
+            deck.RemoveAt(deck.Count - 1);
+        }
+
+        foreach (string card in hand)
         {
             GameObject newCard = Instantiate(cardPrefab, playerArea.transform, true);
             newCard.transform.SetParent(playerArea.transform, false);
@@ -107,11 +121,13 @@ public class Pidro : MonoBehaviour
 
             newCard.transform.position = playerArea.transform.position;
             newCard.transform.position = new Vector3(newCard.transform.position.x, newCard.transform.position.y, -1);
-            i++;
-            if (i == 8)
-            {
-                break;
-            }
         }
+    }
+
+
+    public void MoveCardBetweenStringLists(string card, List<string> srcList, List<string> destList)
+    {
+        destList.Add(card);
+        srcList.Remove(card);
     }
 }
