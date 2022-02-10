@@ -8,12 +8,15 @@ public class Pidro : MonoBehaviour
     public Sprite[] cardFaces;
     public GameObject cardPrefab;
 
-    public GameObject playerArea;
+    public GameObject player1_area;
+    public GameObject player2_area;
+    public GameObject player3_area;
+    public GameObject player4_area;
 
     public static string[] suits = new string[] {"Spades", "Hearts", "Diamonds", "Clubs"};
     public static string[] values = new string[] {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
 
-    
+    private bool firstDeal = true;    
 
     private List<string> player1_hand = new List<string>();
     private List<string> player2_hand = new List<string>();
@@ -25,18 +28,28 @@ public class Pidro : MonoBehaviour
     private List<string> player3_field = new List<string>();
     private List<string> player4_field = new List<string>();
 
-
-
+    public List<string> hasSprite = new List<string>();
     public List<string> discard = new List<string>();
     
     public List<string> deck;
 
     public List<string> currentPlayer_hand;
     public List<string> currentPlayer_field;
+    public GameObject currentPlayer_area;
 
-    public void PlayCards()
+    private static Pidro _instance;
+
+    public static Pidro Instance { get { return _instance; } }
+
+
+    void Awake()
     {
-        DealCards(currentPlayer_hand);
+        if(_instance != null && _instance != this)
+        {
+            Destroy(this.gameObject);
+        } else {
+            _instance = this; 
+        }
     }
 
     // Start is called before the first frame update
@@ -59,6 +72,36 @@ public class Pidro : MonoBehaviour
 
     }
 
+    public void PlayCards()
+    {
+
+        if (firstDeal)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                Debug.Log("Dealt 3 cards to player 1");
+                currentPlayer_hand = player1_hand;
+                currentPlayer_area = player1_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_area);
+
+                Debug.Log("Dealt 3 cards to player 2");
+                currentPlayer_hand = player2_hand;
+                currentPlayer_area = player2_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_area);
+
+                Debug.Log("Dealt 3 cards to player 3");
+                currentPlayer_hand = player3_hand;
+                currentPlayer_area = player3_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_area);
+
+                Debug.Log("Dealt 3 cards to player 4");
+                currentPlayer_hand = player4_hand;
+                currentPlayer_area = player4_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_area);
+            }
+        }
+        currentPlayer_hand = player1_hand;
+    }
 
     public static List<string> GenerateDeck()
     {
@@ -103,10 +146,10 @@ public class Pidro : MonoBehaviour
         }
     }
 
-    void DealCards(List<string> hand)
+    void DealCards(int amount, List<string> hand, GameObject area)
     {
 
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < amount; i++)
         {
             hand.Add(deck.Last<string>());
             deck.RemoveAt(deck.Count - 1);
@@ -114,14 +157,34 @@ public class Pidro : MonoBehaviour
 
         foreach (string card in hand)
         {
-            GameObject newCard = Instantiate(cardPrefab, playerArea.transform, true);
-            newCard.transform.SetParent(playerArea.transform, false);
-            newCard.name = card;
-            newCard.GetComponent<Selectable>().faceUp = true;
+            if (!(hasSprite.Contains(card))) 
+            {
+                GameObject newCard = Instantiate(cardPrefab, area.transform, true);
+                newCard.transform.SetParent(area.transform, false);
+                newCard.name = card;
+                newCard.GetComponent<Selectable>().faceUp = true;
 
-            newCard.transform.position = playerArea.transform.position;
-            newCard.transform.position = new Vector3(newCard.transform.position.x, newCard.transform.position.y, -1);
+                newCard.transform.position = area.transform.position;
+                newCard.transform.position = new Vector3(newCard.transform.position.x, newCard.transform.position.y, -1);
+
+                if(area.name == "Player2_area")
+                    newCard.transform.Rotate(0,0,90);
+
+                if(area.name == "Player3_area")
+                    newCard.transform.Rotate(0,0,180);
+
+                if(area.name == "Player4_area")
+                    newCard.transform.Rotate(0,0,-90);
+
+
+                hasSprite.Add(card);
+            }
         }
+    }
+
+    public Sprite GetCardFaceAtIndex(int i)
+    {
+        return cardFaces[i];
     }
 
 

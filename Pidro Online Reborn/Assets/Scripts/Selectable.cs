@@ -11,6 +11,7 @@ public class Selectable : MonoBehaviour
     private bool isOverHand;
 
     [SerializeField] private Vector2 startPosition;
+    [SerializeField] private Quaternion startRotation;
 
     public GameObject Canvas;
     public GameObject DropZone;
@@ -57,6 +58,7 @@ public class Selectable : MonoBehaviour
         dragOffset = transform.position - GetMousePos();
         startParent = transform.parent.gameObject;
         startPosition = transform.position;
+        startRotation = transform.rotation;
 
     }
 
@@ -98,6 +100,7 @@ public class Selectable : MonoBehaviour
             transform.SetParent(startParent.transform, false);
         }
 
+        transform.rotation = startRotation;
     }
 
     private Vector3 GetMousePos()

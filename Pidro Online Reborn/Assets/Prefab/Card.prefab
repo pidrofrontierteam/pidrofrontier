@@ -171,3 +171,4 @@ MonoBehaviour:
   Canvas: {fileID: 0}
   DropZone: {fileID: 0}
   dragSpeed: 30
+  pidro: {fileID: 0}
