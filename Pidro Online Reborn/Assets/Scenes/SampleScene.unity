@@ -286,7 +286,7 @@ GameObject:
   - component: {fileID: 268826897}
   - component: {fileID: 268826896}
   m_Layer: 0
-  m_Name: Player1_area
+  m_Name: Player1_hand_area
   m_TagString: Hand
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -506,8 +506,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1178593132}
-  - {fileID: 547211233}
   - {fileID: 978682352}
+  - {fileID: 547211233}
   - {fileID: 1398454705}
   - {fileID: 39907118}
   m_Father: {fileID: 0}
@@ -533,7 +533,7 @@ GameObject:
   - component: {fileID: 398108864}
   - component: {fileID: 398108863}
   m_Layer: 0
-  m_Name: Player2_area
+  m_Name: Player2_hand_area
   m_TagString: Hand
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -827,16 +827,22 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   cardPrefab: {fileID: 8248516512671124264, guid: 41dc37d325821a940ad9f83c28fc9ffd, type: 3}
-  player1_area: {fileID: 268826891}
-  player2_area: {fileID: 398108861}
-  player3_area: {fileID: 1805887543}
-  player4_area: {fileID: 1537656234}
+  player1_hand_area: {fileID: 268826891}
+  player2_hand_area: {fileID: 398108861}
+  player3_hand_area: {fileID: 1805887543}
+  player4_hand_area: {fileID: 1537656234}
+  player1_field_area: {fileID: 1430336310}
+  player2_field_area: {fileID: 1237030955}
+  player3_field_area: {fileID: 1524629878}
+  player4_field_area: {fileID: 1982397425}
   hasSprite: []
   discard: []
   deck: []
+  sortedDeck: []
   currentPlayer_hand: []
   currentPlayer_field: []
-  currentPlayer_area: {fileID: 0}
+  currentPlayer_hand_area: {fileID: 0}
+  currentPlayer_field_area: {fileID: 0}
 --- !u!4 &526048699
 Transform:
   m_ObjectHideFlags: 0
@@ -885,7 +891,7 @@ Transform:
   - {fileID: 1524629879}
   - {fileID: 1982397426}
   m_Father: {fileID: 381997505}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &727016238
 GameObject:
@@ -1018,7 +1024,7 @@ RectTransform:
   - {fileID: 1805887544}
   - {fileID: 1537656235}
   m_Father: {fileID: 381997505}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -1196,7 +1202,7 @@ GameObject:
   - component: {fileID: 1237030958}
   - component: {fileID: 1237030957}
   m_Layer: 7
-  m_Name: Player2_field
+  m_Name: Player2_field_area
   m_TagString: DropZone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1422,7 +1428,7 @@ GameObject:
   - component: {fileID: 1430336315}
   - component: {fileID: 1430336316}
   m_Layer: 7
-  m_Name: Player1_field
+  m_Name: Player1_field_area
   m_TagString: DropZone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1564,7 +1570,7 @@ GameObject:
   - component: {fileID: 1524629881}
   - component: {fileID: 1524629880}
   m_Layer: 7
-  m_Name: Player3_field
+  m_Name: Player3_field_area
   m_TagString: DropZone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1706,7 +1712,7 @@ GameObject:
   - component: {fileID: 1537656237}
   - component: {fileID: 1537656236}
   m_Layer: 0
-  m_Name: Player4_area
+  m_Name: Player4_hand_area
   m_TagString: Hand
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1848,7 +1854,7 @@ GameObject:
   - component: {fileID: 1805887546}
   - component: {fileID: 1805887545}
   m_Layer: 0
-  m_Name: Player3_area
+  m_Name: Player3_hand_area
   m_TagString: Hand
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1990,7 +1996,7 @@ GameObject:
   - component: {fileID: 1982397428}
   - component: {fileID: 1982397427}
   m_Layer: 7
-  m_Name: Player4_field
+  m_Name: Player4_field_area
   m_TagString: DropZone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

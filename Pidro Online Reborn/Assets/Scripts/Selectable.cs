@@ -25,17 +25,17 @@ public class Selectable : MonoBehaviour
 
     private Camera cam;
 
-    public Pidro pidro;
+    private Pidro pidro;
 
 
     // Awake is called when the script instance is being loaded
     public void Awake()
     {
+        pidro = Pidro.Instance;
+
         cam = Camera.main;
         Canvas = GameObject.Find("Main Canvas");
         DropZone = GameObject.Find("PlayerDropZone");
-        pidro = GameObject.Find("GameManager").GetComponent<Pidro>();
-
     }
 
     // Start is called before the first frame update
@@ -79,7 +79,7 @@ public class Selectable : MonoBehaviour
             string result = pidro.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
             if (result == null)
             {
-                pidro.MoveCardBetweenStringLists(transform.gameObject.name, pidro.currentPlayer_hand, pidro.currentPlayer_field);
+                pidro.MoveCardBetweenLists(transform.gameObject.name, pidro.currentPlayer_hand, pidro.currentPlayer_field);
             }
         }
         // Checks whether the cursor is above the hand when released, if so it puts the card gameobject into the hand and manages the string lists
@@ -91,16 +91,22 @@ public class Selectable : MonoBehaviour
             string result = pidro.currentPlayer_hand.FirstOrDefault(s => s.Contains(transform.gameObject.name));
             if (result == null)
             {
-                pidro.MoveCardBetweenStringLists(transform.gameObject.name, pidro.currentPlayer_field, pidro.currentPlayer_hand);
+                pidro.MoveCardBetweenLists(transform.gameObject.name, pidro.currentPlayer_field, pidro.currentPlayer_hand);
             }
         } 
         else 
         {
             transform.position = startPosition;
             transform.SetParent(startParent.transform, false);
-        }
 
+        }
         transform.rotation = startRotation;
+
+        pidro.currentPlayer_field = pidro.SortCardsList(pidro.currentPlayer_field);
+        pidro.SortCardsGameObjects(pidro.currentPlayer_field, pidro.currentPlayer_field_area);
+
+        pidro.currentPlayer_hand = pidro.SortCardsList(pidro.currentPlayer_hand);
+        pidro.SortCardsGameObjects(pidro.currentPlayer_hand, pidro.currentPlayer_hand_area);
     }
 
     private Vector3 GetMousePos()

@@ -8,12 +8,17 @@ public class Pidro : MonoBehaviour
     public Sprite[] cardFaces;
     public GameObject cardPrefab;
 
-    public GameObject player1_area;
-    public GameObject player2_area;
-    public GameObject player3_area;
-    public GameObject player4_area;
+    public GameObject player1_hand_area;
+    public GameObject player2_hand_area;
+    public GameObject player3_hand_area;
+    public GameObject player4_hand_area;
 
-    public static string[] suits = new string[] {"Spades", "Hearts", "Diamonds", "Clubs"};
+    public GameObject player1_field_area;
+    public GameObject player2_field_area;
+    public GameObject player3_field_area;
+    public GameObject player4_field_area;
+
+    public static string[] suits = new string[] {"Spades", "Hearts", "Clubs", "Diamonds"};
     public static string[] values = new string[] {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
 
     private bool firstDeal = true;    
@@ -32,10 +37,12 @@ public class Pidro : MonoBehaviour
     public List<string> discard = new List<string>();
     
     public List<string> deck;
+    public List<string> sortedDeck;
 
     public List<string> currentPlayer_hand;
     public List<string> currentPlayer_field;
-    public GameObject currentPlayer_area;
+    public GameObject currentPlayer_hand_area;
+    public GameObject currentPlayer_field_area;
 
     private static Pidro _instance;
 
@@ -57,19 +64,24 @@ public class Pidro : MonoBehaviour
     {
         cardFaces = Resources.LoadAll<Sprite>("English_pattern_playing_cards_deck");
 
-        // PlayCards();
+        // Create the deck from which we draw cards
         deck = GenerateDeck();
         Shuffle(deck);
 
-        // for DEBUG: sets current hand and field
+        // Create another deck, the indeces of which are used for sorting
+        sortedDeck = GenerateDeck();
+
+        //DEBUG: sets current hand and field
         currentPlayer_hand = player1_hand;
         currentPlayer_field = player1_field;
+        currentPlayer_hand_area = player1_hand_area;
+        currentPlayer_field_area = player1_field_area;
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        
     }
 
     public void PlayCards()
@@ -79,28 +91,45 @@ public class Pidro : MonoBehaviour
         {
             for (int i = 0; i < 3; i++)
             {
-                Debug.Log("Dealt 3 cards to player 1");
+                //Debug.Log("Dealt 3 cards to player 1");
                 currentPlayer_hand = player1_hand;
-                currentPlayer_area = player1_area;
-                DealCards(3, currentPlayer_hand, currentPlayer_area);
+                currentPlayer_hand_area = player1_hand_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
 
-                Debug.Log("Dealt 3 cards to player 2");
+                //Debug.Log("Dealt 3 cards to player 2");
                 currentPlayer_hand = player2_hand;
-                currentPlayer_area = player2_area;
-                DealCards(3, currentPlayer_hand, currentPlayer_area);
+                currentPlayer_hand_area = player2_hand_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
 
-                Debug.Log("Dealt 3 cards to player 3");
+                //Debug.Log("Dealt 3 cards to player 3");
                 currentPlayer_hand = player3_hand;
-                currentPlayer_area = player3_area;
-                DealCards(3, currentPlayer_hand, currentPlayer_area);
+                currentPlayer_hand_area = player3_hand_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
 
-                Debug.Log("Dealt 3 cards to player 4");
+                //Debug.Log("Dealt 3 cards to player 4");
                 currentPlayer_hand = player4_hand;
-                currentPlayer_area = player4_area;
-                DealCards(3, currentPlayer_hand, currentPlayer_area);
+                currentPlayer_hand_area = player4_hand_area;
+                DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
             }
         }
+        player1_hand = SortCardsList(player1_hand);
+        SortCardsGameObjects(player1_hand, player1_hand_area);
+
+        player2_hand = SortCardsList(player2_hand);
+        SortCardsGameObjects(player2_hand, player2_hand_area);
+
+        player3_hand = SortCardsList(player3_hand);
+        SortCardsGameObjects(player3_hand, player3_hand_area);
+
+        player4_hand = SortCardsList(player4_hand);
+        SortCardsGameObjects(player4_hand, player4_hand_area);
+
+
+        //DEBUG:
         currentPlayer_hand = player1_hand;
+        currentPlayer_field = player1_field;
+        currentPlayer_hand_area = player1_hand_area;
+        currentPlayer_field_area = player1_field_area;
     }
 
     public static List<string> GenerateDeck()
@@ -165,7 +194,7 @@ public class Pidro : MonoBehaviour
                 newCard.GetComponent<Selectable>().faceUp = true;
 
                 newCard.transform.position = area.transform.position;
-                newCard.transform.position = new Vector3(newCard.transform.position.x, newCard.transform.position.y, -1);
+                newCard.transform.position = new Vector3(newCard.transform.position.x, newCard.transform.position.y, -((sortedDeck.FindIndex(z => z.Equals(newCard.name))))/1000f);
 
                 if(area.name == "Player2_area")
                     newCard.transform.Rotate(0,0,90);
@@ -188,9 +217,41 @@ public class Pidro : MonoBehaviour
     }
 
 
-    public void MoveCardBetweenStringLists(string card, List<string> srcList, List<string> destList)
+    /// <summary>
+    /// Moves a card (string) between a source string-list and a destination string-list
+    /// </summary>
+    public void MoveCardBetweenLists(string card, List<string> srcList, List<string> destList)
     {
         destList.Add(card);
         srcList.Remove(card);
+    }
+
+    /// <summary>
+    /// Sorts list of cards (strings) based on a pre-sorted "master list"
+    /// </summary>
+    public List<string> SortCardsList(List<string> list)
+    {
+        list = list.OrderBy(d => sortedDeck.IndexOf(d)).ToList();
+        Debug.Log("Sorted list");
+        return list;
+    }
+
+
+    /// <summary>
+    /// Sorts children (gameobjects) of parent gameobject based on provided list of cards (strings)
+    /// </summary>
+    public void SortCardsGameObjects(List<string> list, GameObject parent)
+    {
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            foreach (Transform child in parent.transform)
+            {
+                if (list[i].Equals(child.name))
+                {
+                    child.transform.SetSiblingIndex(i);
+                }
+            }
+        }
     }
 }

@@ -14,13 +14,13 @@ public class DropZone : MonoBehaviour
     public void AddCardToList(GameObject gameObject)
     {
         cards.Add(gameObject);
-        UpdateListSortingOrder();
+        // UpdateListSortingOrder();
     }
 
     public void RemoveCardFromList(GameObject gameObject)
     {
         cards.Remove(gameObject);
-        UpdateListSortingOrder();
+        // UpdateListSortingOrder();
     }
 
     private void UpdateListSortingOrder()
