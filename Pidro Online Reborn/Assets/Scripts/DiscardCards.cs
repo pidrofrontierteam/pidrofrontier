@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DrawCards : MonoBehaviour
+public class DiscardCards : MonoBehaviour
 {
     public Pidro pidro;
     
@@ -13,6 +13,6 @@ public class DrawCards : MonoBehaviour
 
     public void OnClick()
     {
-        pidro.PlayCards();
+        pidro.DiscardCards();
     }
 }

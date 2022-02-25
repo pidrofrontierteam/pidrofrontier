@@ -5,23 +5,33 @@ using System.Linq;
 
 public class Pidro : MonoBehaviour
 {
+    [Header("Visible for debugging")]
+    public string selectedSuit;
+    public bool firstDeal = true;  
+    public int minBet = 7; 
+    [Space(20)] 
+
+    [Header("Card GameObject")]
     public Sprite[] cardFaces;
     public GameObject cardPrefab;
+    [Space(20)]
 
+    [Header("Players' Hand Gameobjects")]
     public GameObject player1_hand_area;
     public GameObject player2_hand_area;
     public GameObject player3_hand_area;
     public GameObject player4_hand_area;
+    [Space(20)]
 
+    [Header("Players' Field Gameobjects")]
     public GameObject player1_field_area;
     public GameObject player2_field_area;
     public GameObject player3_field_area;
     public GameObject player4_field_area;
+    [Space(20)]
 
-    public static string[] suits = new string[] {"Spades", "Hearts", "Clubs", "Diamonds"};
-    public static string[] values = new string[] {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
-
-    private bool firstDeal = true;    
+    private static string[] suits = new string[] {"Spades", "Hearts", "Clubs", "Diamonds"};
+    private static string[] values = new string[] {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
 
     private List<string> player1_hand = new List<string>();
     private List<string> player2_hand = new List<string>();
@@ -33,18 +43,32 @@ public class Pidro : MonoBehaviour
     private List<string> player3_field = new List<string>();
     private List<string> player4_field = new List<string>();
 
-    public List<string> hasSprite = new List<string>();
-    public List<string> discard = new List<string>();
-    
-    public List<string> deck;
-    public List<string> sortedDeck;
+    private int player1_bet = 0;
+    private int player2_bet = 0;
+    private int player3_bet = 0;
+    private int player4_bet = 0;
 
+    private List<string> hasSprite = new List<string>();
+
+
+    private List<string> discard = new List<string>();
+    
+    private List<string> deck;
+    private List<string> sortedDeck;
+    
+    [Header("Current Player's Information")]
     public List<string> currentPlayer_hand;
     public List<string> currentPlayer_field;
     public GameObject currentPlayer_hand_area;
     public GameObject currentPlayer_field_area;
+    public int currentPlayer_bet = 0;
+    [Space(20)]
 
     private static Pidro _instance;
+
+
+
+
 
     public static Pidro Instance { get { return _instance; } }
 
@@ -76,6 +100,8 @@ public class Pidro : MonoBehaviour
         currentPlayer_field = player1_field;
         currentPlayer_hand_area = player1_hand_area;
         currentPlayer_field_area = player1_field_area;
+
+        selectedSuit = "Hearts";
     }
 
     // Update is called once per frame
@@ -110,7 +136,9 @@ public class Pidro : MonoBehaviour
                 currentPlayer_hand = player4_hand;
                 currentPlayer_hand_area = player4_hand_area;
                 DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
+
             }
+            firstDeal = false;
         }
         player1_hand = SortCardsList(player1_hand);
         SortCardsGameObjects(player1_hand, player1_hand_area);
@@ -211,6 +239,34 @@ public class Pidro : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Removes cards that do not belong to the selected suite from currentPlayer_hand and adds it to a discard list and removes any matching GameObjects from the scene.
+    /// </summary>
+    public void DiscardCards()
+    {
+        // Adds each non-matching card in currentPlayer_hand list to discard list. (Does not remove, because can't modify while enumerating)
+        foreach (string card in currentPlayer_hand)
+        {
+            if (!card.Substring(0,card.Length).Contains(selectedSuit))
+            {
+                discard.Add(card);
+            }
+        }
+
+        // Removes each card in discard list from currentPlayer_hand list.
+        for (int i = 0; i < currentPlayer_hand.Count; )
+        {
+            if (discard.Contains(currentPlayer_hand[i]))
+            {
+                Destroy(currentPlayer_hand_area.transform.Find(currentPlayer_hand[i]).gameObject); //Destroy gameobject in hand area with a name that matches i
+                currentPlayer_hand.RemoveAt(i);
+            } else {
+                i++;
+            }
+        }
+        
+    }
+
     public Sprite GetCardFaceAtIndex(int i)
     {
         return cardFaces[i];
@@ -253,5 +309,23 @@ public class Pidro : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Sets the current player's bet value to parameter value
+    /// </summary>
+    public void SetBet(int newBetValue)
+    {
+        currentPlayer_bet = newBetValue;
+    }
+
+    public int GetMinBet()
+    {
+        return minBet;
+    }
+
+    public void DebugPrint()
+    {
+        Debug.Log("all my homies hate putin");
     }
 }
