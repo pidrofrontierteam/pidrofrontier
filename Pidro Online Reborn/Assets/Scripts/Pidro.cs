@@ -8,7 +8,7 @@ public class Pidro : MonoBehaviour
     [Header("Visible for debugging")]
     public string selectedSuit;
     public bool firstDeal = true;  
-    public int minBet = 7; 
+    public int minBet;
     [Space(20)] 
 
     [Header("Card GameObject")]
@@ -139,6 +139,9 @@ public class Pidro : MonoBehaviour
 
             }
             firstDeal = false;
+        } else 
+        {
+            Debug.Log("Second deal");
         }
         player1_hand = SortCardsList(player1_hand);
         SortCardsGameObjects(player1_hand, player1_hand_area);
