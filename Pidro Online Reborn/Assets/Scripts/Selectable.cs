@@ -25,13 +25,13 @@ public class Selectable : MonoBehaviour
 
     private Camera cam;
 
-    private Pidro pidro;
+    private GameManager gameManager;
 
 
     // Awake is called when the script instance is being loaded
     public void Awake()
     {
-        pidro = Pidro.Instance;
+        gameManager = GameManager.Instance;
 
         cam = Camera.main;
         Canvas = GameObject.Find("Main Canvas");
@@ -76,10 +76,10 @@ public class Selectable : MonoBehaviour
             transform.SetParent(dropZone.transform, false);
 
             // Checks whether card is already in the field
-            string result = pidro.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
+            string result = gameManager.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
             if (result == null)
             {
-                pidro.MoveCardBetweenLists(transform.gameObject.name, pidro.currentPlayer_hand, pidro.currentPlayer_field);
+                gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_hand, gameManager.currentPlayer_field);
             }
         }
         // Checks whether the cursor is above the hand when released, if so it puts the card gameobject into the hand and manages the string lists
@@ -88,10 +88,10 @@ public class Selectable : MonoBehaviour
             transform.SetParent(hand.transform, false);
 
             // Checks whether card is already in the hand
-            string result = pidro.currentPlayer_hand.FirstOrDefault(s => s.Contains(transform.gameObject.name));
+            string result = gameManager.currentPlayer_hand.FirstOrDefault(s => s.Contains(transform.gameObject.name));
             if (result == null)
             {
-                pidro.MoveCardBetweenLists(transform.gameObject.name, pidro.currentPlayer_field, pidro.currentPlayer_hand);
+                gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_field, gameManager.currentPlayer_hand);
             }
         } 
         else 
@@ -102,11 +102,11 @@ public class Selectable : MonoBehaviour
         }
         transform.rotation = startRotation;
 
-        pidro.currentPlayer_field = pidro.SortCardsList(pidro.currentPlayer_field);
-        pidro.SortCardsGameObjects(pidro.currentPlayer_field, pidro.currentPlayer_field_area);
+        gameManager.currentPlayer_field = gameManager.SortCardsList(gameManager.currentPlayer_field);
+        gameManager.SortCardsGameObjects(gameManager.currentPlayer_field, gameManager.currentPlayer_field_area);
 
-        pidro.currentPlayer_hand = pidro.SortCardsList(pidro.currentPlayer_hand);
-        pidro.SortCardsGameObjects(pidro.currentPlayer_hand, pidro.currentPlayer_hand_area);
+        gameManager.currentPlayer_hand = gameManager.SortCardsList(gameManager.currentPlayer_hand);
+        gameManager.SortCardsGameObjects(gameManager.currentPlayer_hand, gameManager.currentPlayer_hand_area);
     }
 
     private Vector3 GetMousePos()

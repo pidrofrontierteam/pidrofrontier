@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class DrawCards : MonoBehaviour
 {
-    public Pidro pidro;
+    public GameManager gameManager;
     
     private void Awake()
     {
-        pidro = GameObject.Find("GameManager").GetComponent<Pidro>();
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
     }
 
     public void OnClick()
     {
-        pidro.PlayCards();
+        // gameManager.PlayCards();
+        Debug.Log("DEBUG: DRAW CARDS");
     }
 }

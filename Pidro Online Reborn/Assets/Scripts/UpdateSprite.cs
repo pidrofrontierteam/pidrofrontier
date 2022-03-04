@@ -10,21 +10,21 @@ public class UpdateSprite : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private Selectable selectable;
 
-    private Pidro pidro;
+    private GameManager gameManager;
 
     // Start is called before the first frame update
     void Start()
     {
-        pidro = Pidro.Instance;
+        gameManager = GameManager.Instance;
 
-        List<string> deck = Pidro.GenerateDeck();
+        List<string> deck = GameManager.GenerateDeck();
 
         int i = 0;
         foreach (string card in deck)
         {
             if (this.name == card)
             {
-                cardFace = pidro.GetCardFaceAtIndex(i);
+                cardFace = gameManager.GetCardFaceAtIndex(i);
                 break;
             }
             i++;

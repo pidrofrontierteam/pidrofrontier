@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TransformTable : MonoBehaviour
+public class LayoutManager : MonoBehaviour
 {
     [Header("Players' Hand Transforms")]
     public Transform player1_hand_area;
@@ -48,8 +48,21 @@ public class TransformTable : MonoBehaviour
     private Quaternion west_field_rotation;
 
 
+    private static LayoutManager _instance;
+
+    public static LayoutManager Instance { get { return _instance; } }
+
+
     void Awake()
     {
+
+        if(_instance != null && _instance != this)
+        {
+            Destroy(this.gameObject);
+        } else {
+            _instance = this; 
+        }
+
         // Getting cardinal hand positions
         north_hand_position = player3_hand_area.position;
         east_hand_position = player4_hand_area.position;

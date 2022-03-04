@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class DiscardCards : MonoBehaviour
 {
-    public Pidro pidro;
+    public GameManager gameManager;
     
     private void Awake()
     {
-        pidro = GameObject.Find("GameManager").GetComponent<Pidro>();
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
     }
 
     public void OnClick()
     {
-        pidro.DiscardCards();
+        // gameManager.DiscardCards();
+        Debug.Log("DEBUG: DISCARD CARDS");
     }
 }
