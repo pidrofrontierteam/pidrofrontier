@@ -35,12 +35,16 @@ public class GameManager : MonoBehaviour
 {
     [Header("Visible for debugging")]
     public string selectedSuit;
+    public string sameColorSuit;
     public bool firstDeal = true;  
     public int minBet;
     public GameState state;
     public static event Action<GameState> OnGameStateChanged;
     public int betIndex;
-    private int currentPlayer;
+    public int currentPlayer;
+    public int firstPlayerIndex; // Increment by 1 after each round. If 4 set it to 1 rather than increment.
+    public int dealer;
+    
     [Space(20)] 
 
     [Header("Card GameObject")]
@@ -102,7 +106,7 @@ public class GameManager : MonoBehaviour
     public int currentPlayer_bet = 0;
     [Space(20)]
 
-    private int firstPlayerIndex; // Increment by 1 after each round. If 4 set it to 1 rather than increment.
+
 
     // Singleton references
     private LayoutManager layoutManager;
@@ -117,6 +121,7 @@ public class GameManager : MonoBehaviour
     private bool isBetting = false;
 
 
+    // Awake is called when the script instance is being loaded.
     void Awake()
     {
         // Disallow duplicate GameManager instances as it is a singleton
@@ -132,7 +137,7 @@ public class GameManager : MonoBehaviour
         betManager = BetManager.Instance;
     }
 
-    // Start is called before the first frame update
+    // Start is called before the first frame update.
     void Start()
     {
         cardFaces = Resources.LoadAll<Sprite>("English_pattern_playing_cards_deck");
@@ -156,7 +161,7 @@ public class GameManager : MonoBehaviour
         selectedSuit = "Hearts";
     }
 
-    // Update is called once per frame
+    // Update is called once per frame.
     void Update()
     {
 
@@ -202,13 +207,13 @@ public class GameManager : MonoBehaviour
                 HandleChooseSuit();
                 break;
             case GameState.FirstDiscard:
-                HandleFirstDiscard();
+                StartCoroutine(HandleFirstDiscard());
                 break;
             case GameState.SecondDraw:
-                HandleSecondDraw();
+                StartCoroutine(HandleSecondDraw());
                 break;
             case GameState.SecondDiscard:
-                HandleSecondDiscard();
+                StartCoroutine(HandleSecondDiscard());
                 break;
             case GameState.TurnPlayer1Start:
                 break;
@@ -232,24 +237,30 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
+        // Invokes a new states only if there's been a change in gamestates
         OnGameStateChanged?.Invoke(newState);
     }
 
+    #region GameStateHandling
+
     public void HandleMatchStart()
     {
+        Debug.Log("===HANDLE MATCH START===");
         // Create the deck from which we draw cards
         deck = GenerateDeck();
 
         // Create another deck, the indeces of which are used for sorting
         sortedDeck = GenerateDeck();
 
-        // For the first round, Player 1 always starts.
-        firstPlayerIndex = 1;
+        dealer = 1; //FIXME: DEBUG
+        SetFirstPlayer(dealer);
+        
         UpdateGameState(GameState.FirstDraw);
     }
 
     public void HandleFirstDraw()
     {
+        Debug.Log("===HANDLE FIRST DRAW===");
         Shuffle(deck);
         betIndex = 1;
 
@@ -282,6 +293,8 @@ public class GameManager : MonoBehaviour
         
         int order = DeterminePlayerOrder();
 
+        
+
         switch (order) {
             case 1:
                 UpdateGameState(GameState.BetPlayer1Start);
@@ -300,6 +313,7 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer1Start()
     {
+        Debug.Log("===HANDLE BET PLAYER 1===");
         currentPlayer = 1;
         layoutManager.Player1Turn();
         betManager.EnableBettingUI();
@@ -321,6 +335,7 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer2Start()
     {
+        Debug.Log("===HANDLE BET PLAYER 2===");
         currentPlayer = 2;
         layoutManager.Player2Turn();
         betManager.EnableBettingUI();
@@ -342,6 +357,7 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer3Start()
     {
+        Debug.Log("===HANDLE BET PLAYER 3===");
         currentPlayer = 3;
         layoutManager.Player3Turn();
         betManager.EnableBettingUI();
@@ -363,6 +379,7 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer4Start()
     {
+        Debug.Log("===HANDLE BET PLAYER 4===");
         currentPlayer = 4;
         layoutManager.Player4Turn();
         betManager.EnableBettingUI();
@@ -384,13 +401,27 @@ public class GameManager : MonoBehaviour
 
     public void HandleChooseSuit()
     {
+        Debug.Log("===HANDLE CHOOSE SUIT===");
         if(player1_bet == 0 && player2_bet == 0 && player3_bet == 0 && player4_bet == 0)
         {
-            player1_bet = 6; // should be dealer
+            switch(dealer)
+            {
+                case 1:
+                    player1_bet = 6;
+                    break;
+                case 2:
+                    player2_bet = 6;
+                    break;
+                case 3:
+                    player3_bet = 6;
+                    break;
+                case 4:
+                    player4_bet = 6;
+                    break;
+            }
         } else {
            int highest = GetHighestBet(); 
 
-           //FIXME: Make sure that in the case where multiple people bid 14, the last to do so wins
            if (player1_bet == highest || highest14 == 1)
            {
                Debug.Log("player 1 won bet");
@@ -419,39 +450,123 @@ public class GameManager : MonoBehaviour
            {
                throw new Exception("Error finding highest bet");
            }
-
-           betManager.EnableSuitSelectionUI();
         }
+        betManager.EnableSuitSelectionUI();
     }
 
-    public void HandleFirstDiscard()
+    public IEnumerator HandleFirstDiscard()
     {
+        Debug.Log("===HANDLE FIRST DISCARD===");
         Debug.Log("Discarding p1");
         DiscardCards(player1_hand, player1_hand_area);
+        yield return new WaitForSeconds(1);
 
         Debug.Log("Discarding p2");
         DiscardCards(player2_hand, player2_hand_area);
+        yield return new WaitForSeconds(1);
         
         Debug.Log("Discarding p3");
         DiscardCards(player3_hand, player3_hand_area);
+        yield return new WaitForSeconds(1);
         
         Debug.Log("Discarding p4");
         DiscardCards(player4_hand, player4_hand_area);
+        yield return new WaitForSeconds(1);
 
-        // Discard non-suited cards so that 6 remain, prioritized by value or whether pidro
-        // Move to second draw
+        UpdateGameState(GameState.SecondDraw);
     }
 
-    public void HandleSecondDraw()
+    public IEnumerator HandleSecondDraw()
     {
-        // Draw new cards unless.. reasons
-        // Move to second discard
+        Debug.Log("===HANDLE SECOND DRAW===");
+
+        //TODO: Dealer gets all remaining cards.
+
+
+        yield return new WaitForSeconds(1);
+        while(player1_hand.Count() < 6)
+        {
+            Debug.Log("Drew 1 card for p1");
+            DrawCards(1, player1_hand, player1_hand_area);
+        }
+
+        yield return new WaitForSeconds(1);
+        while(player2_hand.Count() < 6)
+        {
+            Debug.Log("Drew 1 card for p2");
+            DrawCards(1, player2_hand, player2_hand_area);
+        }
+
+        yield return new WaitForSeconds(1);
+        while(player3_hand.Count() < 6)
+        {
+            Debug.Log("Drew 1 card for p3");
+            DrawCards(1, player3_hand, player3_hand_area);
+        }
+
+        yield return new WaitForSeconds(1);
+        while(player4_hand.Count() < 6)
+        {
+            Debug.Log("Drew 1 card for p4");
+            DrawCards(1, player4_hand, player4_hand_area);
+        }
+
+        player1_hand = SortCardsList(player1_hand);
+        SortCardsGameObjects(player1_hand, player1_hand_area);
+
+        player2_hand = SortCardsList(player2_hand);
+        SortCardsGameObjects(player2_hand, player2_hand_area);
+
+        player3_hand = SortCardsList(player3_hand);
+        SortCardsGameObjects(player3_hand, player3_hand_area);
+
+        player4_hand = SortCardsList(player4_hand);
+        SortCardsGameObjects(player4_hand, player4_hand_area);
+
+        yield return new WaitForSeconds(1);
+        UpdateGameState(GameState.SecondDiscard);
     }
 
-    public void HandleSecondDiscard()
+    public IEnumerator HandleSecondDiscard()
     {
-        // Discard non-suited cards so that 6 remain, prioritized by value or whether pidro
-        // Move to first round of the game
+        Debug.Log("===HANDLE SECOND DISCARD===");
+        //TODO: Dealer does not discard unsuited cards, and always keeps 6. Unsuited card values don't matter.
+
+        Debug.Log("Discarding unsuited p1");
+        DiscardCards(player1_hand, player1_hand_area);
+        Debug.Log("Discarding suited p1");
+        while(player1_hand.Count() > 6)
+        {
+            DiscardLowestSuited(player1_hand, player1_hand_area);
+        }
+        yield return new WaitForSeconds(1);
+
+        Debug.Log("Discarding unsuited p2");
+        DiscardCards(player2_hand, player2_hand_area);
+        Debug.Log("Discarding suited p2");
+        while(player2_hand.Count() > 6)
+        {
+            DiscardLowestSuited(player2_hand, player2_hand_area);
+        }
+        yield return new WaitForSeconds(1);
+        
+        Debug.Log("Discarding unsuited p3");
+        DiscardCards(player3_hand, player3_hand_area);
+        Debug.Log("Discarding suited p3");
+        while(player3_hand.Count() > 6)
+        {
+            DiscardLowestSuited(player3_hand, player3_hand_area);
+        }
+        yield return new WaitForSeconds(1);
+        
+        Debug.Log("Discarding unsuited p4");
+        DiscardCards(player4_hand, player4_hand_area);
+        Debug.Log("Discarding suited p4");
+        while(player4_hand.Count() > 6)
+        {
+            DiscardLowestSuited(player4_hand, player4_hand_area);
+        }
+        yield return new WaitForSeconds(1);
 
         int order = DeterminePlayerOrder();
 
@@ -471,6 +586,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    #endregion GameStateHandling
+
     public int GetHighestBet()
     {
         int max = player1_bet;
@@ -484,60 +601,6 @@ public class GameManager : MonoBehaviour
 
         return max;
     }
-
-    //TODO: Remove when states verified working.
-    // public void PlayCards()
-    // {
-
-    //     if (firstDeal)
-    //     {
-    //         for (int i = 0; i < 3; i++)
-    //         {
-    //             //Debug.Log("Dealt 3 cards to player 1");
-    //             currentPlayer_hand = player1_hand;
-    //             currentPlayer_hand_area = player1_hand_area;
-    //             DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
-
-    //             //Debug.Log("Dealt 3 cards to player 2");
-    //             currentPlayer_hand = player2_hand;
-    //             currentPlayer_hand_area = player2_hand_area;
-    //             DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
-
-    //             //Debug.Log("Dealt 3 cards to player 3");
-    //             currentPlayer_hand = player3_hand;
-    //             currentPlayer_hand_area = player3_hand_area;
-    //             DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
-
-    //             //Debug.Log("Dealt 3 cards to player 4");
-    //             currentPlayer_hand = player4_hand;
-    //             currentPlayer_hand_area = player4_hand_area;
-    //             DealCards(3, currentPlayer_hand, currentPlayer_hand_area);
-
-    //         }
-    //         firstDeal = false;
-    //     } else 
-    //     {
-    //         Debug.Log("Second deal");
-    //     }
-    //     player1_hand = SortCardsList(player1_hand);
-    //     SortCardsGameObjects(player1_hand, player1_hand_area);
-
-    //     player2_hand = SortCardsList(player2_hand);
-    //     SortCardsGameObjects(player2_hand, player2_hand_area);
-
-    //     player3_hand = SortCardsList(player3_hand);
-    //     SortCardsGameObjects(player3_hand, player3_hand_area);
-
-    //     player4_hand = SortCardsList(player4_hand);
-    //     SortCardsGameObjects(player4_hand, player4_hand_area);
-
-
-    //     //DEBUG:
-    //     currentPlayer_hand = player1_hand;
-    //     currentPlayer_field = player1_field;
-    //     currentPlayer_hand_area = player1_hand_area;
-    //     currentPlayer_field_area = player1_field_area;
-    // }
 
     public int DeterminePlayerOrder()
     {
@@ -583,56 +646,45 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // TODO: Remove when states verified working.
-    // Deprecated but used for reference
-    // void PidroDeal()
-    // {
-    //     float yOffset = 0;
-    //     float zOffset = 0.03f;
-    //     foreach (string card in deck)
-    //     {
-    //         GameObject newCard = Instantiate(cardPrefab, new Vector3(transform.position.x, transform.position.y - yOffset, transform.position.z - zOffset), Quaternion.identity);
-    //         newCard.name = card;
-    //         newCard.GetComponent<Selectable>().faceUp = true;
-
-    //         yOffset += 1f;
-    //         zOffset += 0.03f;
-    //     }
-    // }
-
     void DrawCards(int amount, List<string> hand, GameObject area)
     {
-
-        for (int i = 0; i < amount; i++)
+        try
         {
-            hand.Add(deck.Last<string>());
-            deck.RemoveAt(deck.Count - 1);
-        }
-
-        foreach (string card in hand)
-        {
-            if (!(hasSprite.Contains(card))) 
+            for (int i = 0; i < amount; i++)
             {
-                GameObject newCard = Instantiate(cardPrefab, area.transform, true);
-                newCard.transform.SetParent(area.transform, false);
-                newCard.name = card;
-                newCard.GetComponent<Selectable>().faceUp = true;
-
-                newCard.transform.position = area.transform.position;
-                newCard.transform.position = new Vector3(newCard.transform.position.x, newCard.transform.position.y, -((sortedDeck.FindIndex(z => z.Equals(newCard.name))))/1000f);
-
-                if(area.name == "Player2_area")
-                    newCard.transform.Rotate(0,0,90);
-
-                if(area.name == "Player3_area")
-                    newCard.transform.Rotate(0,0,180);
-
-                if(area.name == "Player4_area")
-                    newCard.transform.Rotate(0,0,-90);
-
-
-                hasSprite.Add(card);
+                hand.Add(deck.Last<string>());
+                deck.RemoveAt(deck.Count - 1);
             }
+
+            foreach (string card in hand)
+            {
+                if (!(hasSprite.Contains(card))) 
+                {
+                    GameObject newCard = Instantiate(cardPrefab, area.transform, true);
+                    newCard.transform.SetParent(area.transform, false);
+                    newCard.name = card;
+                    newCard.GetComponent<Selectable>().faceUp = true;
+
+                    newCard.transform.position = area.transform.position;
+                    newCard.transform.position = new Vector3(newCard.transform.position.x, newCard.transform.position.y, -((sortedDeck.FindIndex(z => z.Equals(newCard.name))))/1000f);
+
+                    if(area.name == "Player2_area")
+                        newCard.transform.Rotate(0,0,90);
+
+                    if(area.name == "Player3_area")
+                        newCard.transform.Rotate(0,0,180);
+
+                    if(area.name == "Player4_area")
+                        newCard.transform.Rotate(0,0,-90);
+
+                    hasSprite.Add(card);
+                }
+            }
+        }
+        catch (System.Exception)
+        {
+            Debug.Log("Exception caught, deck is probably empty. Congratulations on the one in a ???-illion error.");
+            //FIXME: Show congratulatory error message and restart round.
         }
     }
 
@@ -644,10 +696,15 @@ public class GameManager : MonoBehaviour
         // Adds each non-matching card in currentPlayer_hand list to discard list. (Does not remove, because can't modify while enumerating)
         foreach (string card in currentPlayer_hand)
         {
-            if (!card.Substring(0,card.Length).Contains(selectedSuit))
+            if (card.Substring(0,card.Length).Contains(sameColorSuit) && (card.Substring(0,card.Length).Contains("5")))
+            {
+                //If wrong color pidro is found, do not add it to the discard list.
+                Debug.Log("Wrong color pidro found");
+            }
+            else if (!card.Substring(0,card.Length).Contains(selectedSuit))
             {
                 discard.Add(card);
-            }
+            } 
         }
 
         // Removes each card in discard list from currentPlayer_hand list.
@@ -661,7 +718,29 @@ public class GameManager : MonoBehaviour
                 i++;
             }
         }
-        
+    }
+
+    public void DiscardLowestSuited(List<string> currentPlayer_hand, GameObject currentPlayer_hand_area)
+    {
+        foreach(string card in currentPlayer_hand)
+        {
+            if(!(card.Substring(0,card.Length).Contains("2") || card.Substring(0,card.Length).Contains("5") || card.Substring(0,card.Length).Contains("10") || card.Substring(0,card.Length).Contains("J") || card.Substring(0,card.Length).Contains("A")))
+            {
+                discard.Add(card);
+                break;
+            } 
+        }
+        // Removes each card in discard list from currentPlayer_hand list.
+        for (int i = 0; i < currentPlayer_hand.Count; )
+        {
+            if (discard.Contains(currentPlayer_hand[i]))
+            {
+                Destroy(currentPlayer_hand_area.transform.Find(currentPlayer_hand[i]).gameObject); //Destroy gameobject in hand area with a name that matches i
+                currentPlayer_hand.RemoveAt(i);
+            } else {
+                i++;
+            }
+        }
     }
 
     public Sprite GetCardFaceAtIndex(int i)
@@ -685,7 +764,6 @@ public class GameManager : MonoBehaviour
     public List<string> SortCardsList(List<string> list)
     {
         list = list.OrderBy(d => sortedDeck.IndexOf(d)).ToList();
-        Debug.Log("Sorted list");
         return list;
     }
 
@@ -750,13 +828,39 @@ public class GameManager : MonoBehaviour
         return currentPlayer;
     }
 
+    ///<summary>
+    /// Sets selected suit to parameter value and also stores the same colored suit, which is used for determining "wrong color pidro"
+    ///</summary>
     public void SetSuit(string suit)
     {
         selectedSuit = suit;
+
+        switch(suit)
+        {
+            case "Spades":
+                sameColorSuit = "Clubs";
+                break;
+            case "Hearts":
+                sameColorSuit = "Diamonds";
+                break;
+            case "Clubs":
+                sameColorSuit = "Spades";
+                break;
+            case "Diamonds":
+                sameColorSuit = "Hearts";
+                break;
+        }
+        
     }
 
-    public void SetFirstPlayer(int player)
+    public void SetFirstPlayer(int value)
     {
-        firstPlayerIndex = player;
+        if(value == 4)
+        {
+            firstPlayerIndex = 1;
+        } else {
+            firstPlayerIndex = (value+1);
+        }
+        
     }
 }
