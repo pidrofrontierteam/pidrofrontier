@@ -26,12 +26,14 @@ public class Selectable : MonoBehaviour
     private Camera cam;
 
     private GameManager gameManager;
+    private TurnManager turnManager;
 
 
     // Awake is called when the script instance is being loaded
     public void Awake()
     {
         gameManager = GameManager.Instance;
+        turnManager = TurnManager.Instance;
 
         cam = Camera.main;
         Canvas = GameObject.Find("Main Canvas");
@@ -57,15 +59,19 @@ public class Selectable : MonoBehaviour
     {
         dragOffset = transform.position - GetMousePos();
         startParent = transform.parent.gameObject;
+        Debug.Log(startParent);
         startPosition = transform.position;
         startRotation = transform.rotation;
-
     }
 
     public void OnMouseDrag()
     {
-        transform.position = Vector3.MoveTowards(transform.position, GetMousePos() + dragOffset, dragSpeed * Time.deltaTime);
-        transform.SetParent(Canvas.transform, true);
+        // Check if card belongs to current player
+        if(turnManager.canMove && startParent.transform.transform.name == gameManager.currentPlayer_hand_area.transform.name || startParent.transform.transform.name == gameManager.currentPlayer_field_area.transform.name)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, GetMousePos() + dragOffset, dragSpeed * Time.deltaTime);
+            transform.SetParent(Canvas.transform, true);
+        }
     }
 
     private void OnMouseUp()
@@ -73,13 +79,22 @@ public class Selectable : MonoBehaviour
         // Checks whether the cursor is above the drop zone (field) when released, if so it puts the card gameobject into the drop zone and manages the string lists
         if (isOverdropZone)
         {
-            transform.SetParent(dropZone.transform, false);
-
-            // Checks whether card is already in the field
-            string result = gameManager.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
-            if (result == null)
+            // CHECK WHETHER POSSIBLE TO ADD CARDS, I.E., HAVE WE PLAYED A CARD THIS ROUND?
+            if(turnManager.playedCards >= gameManager.currentPlayer_field.Count)
             {
-                gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_hand, gameManager.currentPlayer_field);
+                transform.SetParent(dropZone.transform, false);
+
+                // Checks whether card is already in the field
+                string result = gameManager.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
+                if (result == null)
+                {
+                    gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_hand, gameManager.currentPlayer_field);
+                }
+            }
+            else
+            {
+                transform.position = startPosition;
+                transform.SetParent(startParent.transform, false);
             }
         }
         // Checks whether the cursor is above the hand when released, if so it puts the card gameobject into the hand and manages the string lists
@@ -124,7 +139,7 @@ public class Selectable : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if(collider.gameObject.tag == "DropZone")
+        if(collider.gameObject.tag == "DropZone" && collider.gameObject.name == gameManager.currentPlayer_field_area.transform.name)
         {
             isOverdropZone = true;
             dropZone = collider.gameObject;
@@ -132,7 +147,7 @@ public class Selectable : MonoBehaviour
             
             
         } 
-        else if(collider.gameObject.tag == "Hand") 
+        else if(collider.gameObject.tag == "Hand" && collider.gameObject.name == gameManager.currentPlayer_hand_area.transform.name) 
         {
             isOverHand = true;
             hand = collider.gameObject;

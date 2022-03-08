@@ -5,25 +5,41 @@ using UnityEngine.UI;
 
 public class BetManager : MonoBehaviour
 {
+    [Header("Bet Accept")]
+    [SerializeField] private Transform acceptBetUI;
+    [SerializeField] private Button beginBetButton;
+    [SerializeField] private Text playerNumberBetAccept;
+    
+
+    [Header("Betting")]
+    [SerializeField] private Transform bettingUI;
     [SerializeField] private Button betButton;
     [SerializeField] private Button passButton;
     [SerializeField] private Slider betSlider;
-
-    [SerializeField] private Transform bettingUI;
-    [SerializeField] private Transform suitSelUI;
-
+    [SerializeField] private Text betValue;
+    [SerializeField] private Text playerNumberBet;
     public int minBet = 6;
     public int maxBet = 14;
+    public bool isBetting = false;
+    
+    [Header("Suit Selection Accept")]
+    [SerializeField] private Transform acceptSuitSelUI;
+    [SerializeField] private Button beginSuitSelButton;
+    [SerializeField] private Text playerNumberSuitSelAccept;
 
+    [Header("Suit Selection")]
+    [SerializeField] private Transform suitSelUI;
+    [SerializeField] private Text playerNumberSuit;
     public string suit;
+    
+
 
     private int currentPlayer;
 
-    public bool isBetting = false;
-
-    [SerializeField] private Text betValue;
-    [SerializeField] private Text playerNumberBet;
-    [SerializeField] private Text playerNumberSuit;
+    
+    
+    
+    
     private int sliderValue = 6;
 
     private GameManager gameManager;
@@ -46,13 +62,92 @@ public class BetManager : MonoBehaviour
     void Start()
     {
         gameManager = GameManager.Instance;
-        //minBet = pidro.GetMinBet();
     }
 
     void Update()
     {
         UpdateSlider();
     }
+    public void EnableBetAcceptUI()
+    {
+        currentPlayer = gameManager.GetCurrentPlayer();
+        playerNumberBetAccept.text = "Player " + currentPlayer + "'s turn to bet!";
+        acceptBetUI.gameObject.SetActive(true);
+    }
+
+    public void DisableBetAcceptUI()
+    {
+        acceptBetUI.gameObject.SetActive(false);
+    }
+    public void EnableSuitSelectionAcceptUI()
+    {
+        currentPlayer = gameManager.GetCurrentPlayer();
+        playerNumberSuitSelAccept.text = "Player " + currentPlayer + " won the bet!";
+        acceptSuitSelUI.gameObject.SetActive(true);
+    }
+
+    public void DisableSuitSelectionAcceptUI()
+    {
+        acceptSuitSelUI.gameObject.SetActive(false);
+    }
+
+    public void OnBeginSuitSelClick()
+    {
+        switch(currentPlayer)
+        {
+            case 1:
+            {
+                gameManager.ShowPlayer1Cards(true);
+                break;
+            }
+            case 2:
+            {
+                gameManager.ShowPlayer2Cards(true);
+                break;
+            }
+            case 3:
+            {
+                gameManager.ShowPlayer3Cards(true);
+                break;
+            }
+            case 4:
+            {
+                gameManager.ShowPlayer4Cards(true);
+                break;
+            }
+        }
+        DisableSuitSelectionAcceptUI();
+        gameManager.UpdateGameState(GameState.ChooseSuit);
+    }
+
+    public void OnBeginBetClick()
+    {
+        switch(currentPlayer)
+        {
+            case 1:
+            {
+                gameManager.UpdateGameState(GameState.BetPlayer1Start);
+                break;
+            }
+            case 2:
+            {
+                gameManager.UpdateGameState(GameState.BetPlayer2Start);
+                break;
+            }
+            case 3:
+            {
+                gameManager.UpdateGameState(GameState.BetPlayer3Start);
+                break;
+            }
+            case 4:
+            {
+                gameManager.UpdateGameState(GameState.BetPlayer4Start);
+                break;
+            }
+        }
+        DisableBetAcceptUI();
+    }
+
 
     public void OnBetClick()
     {
