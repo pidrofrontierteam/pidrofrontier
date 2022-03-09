@@ -19,6 +19,8 @@ public class TurnManager : MonoBehaviour
     private int currentPlayer;
     public int playedCards;
 
+    public bool hasAccepted;
+
     public bool canMove = false;
 
     private GameManager gameManager;
@@ -41,18 +43,22 @@ public class TurnManager : MonoBehaviour
     void Start()
     {
         gameManager = GameManager.Instance;
-        //minBet = pidro.GetMinBet();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(playedCards < gameManager.currentPlayer_field.Count)
+        if(hasAccepted && playedCards < gameManager.currentPlayer_field.Count)
         {
             EnableCardMoveUI();
         } else {
             DisableCardMoveUI();
         }
+    }
+
+    public void SetHasAccepted(bool value)
+    {
+        hasAccepted = value;
     }
 
     public void OnBeginClick()
@@ -61,6 +67,7 @@ public class TurnManager : MonoBehaviour
         Debug.Log("Player clicked begin button");
         playedCards = gameManager.currentPlayer_field.Count;
         DisableTurnAcceptUI();
+        SetHasAccepted(true);
         switch(currentPlayer)
         {
             case 1:
@@ -91,35 +98,47 @@ public class TurnManager : MonoBehaviour
         DisableTurnAcceptUI();
         canMove = false;
         playedCards++;
-        
 
         foreach(string card in gameManager.currentPlayer_field)
         {
             if(!(gameManager.deckCardsPlayed.Contains(card)))
             {
+
                 gameManager.PlayedCard(card);
-                if(gameManager.GetCardRank(card) == 0)
+                switch(currentPlayer)
                 {
-                    // if player is 2 or 4
-                    switch(currentPlayer)
-                    {
-                        case 1:
+                    case 1:
+                        if(gameManager.GetCardRank(card) == 0)
+                        {
                             gameManager.redTeamPoints++;
-                            gameManager.player1_playedCardValue = gameManager.GetCardRank(card);
-                            break;
-                        case 2:
+                            gameManager.RedPlayed2(true);
+                        }
+                        gameManager.player1_playedCardRank = gameManager.GetCardRank(card);
+                        break;
+                    case 2:
+                        if(gameManager.GetCardRank(card) == 0)
+                        {
                             gameManager.blueTeamPoints++;
-                            gameManager.player2_playedCardValue = gameManager.GetCardRank(card);
-                            break;
-                        case 3:
+                            gameManager.BluePlayed2(true);
+                        }
+                        gameManager.player2_playedCardRank = gameManager.GetCardRank(card);
+                        break;
+                    case 3:
+                        if(gameManager.GetCardRank(card) == 0)
+                        {
                             gameManager.redTeamPoints++;
-                            gameManager.player3_playedCardValue = gameManager.GetCardRank(card);
-                            break;
-                        case 4:
+                            gameManager.RedPlayed2(true);
+                        }
+                        gameManager.player3_playedCardRank = gameManager.GetCardRank(card);
+                        break;
+                    case 4:
+                        if(gameManager.GetCardRank(card) == 0)
+                        {
                             gameManager.blueTeamPoints++;
-                            gameManager.player4_playedCardValue = gameManager.GetCardRank(card);
-                            break;
-                    }
+                            gameManager.BluePlayed2(true);
+                        }
+                        gameManager.player4_playedCardRank = gameManager.GetCardRank(card);
+                        break;
                 }
             }
         }
@@ -152,7 +171,7 @@ public class TurnManager : MonoBehaviour
 
     public void EnableTurnAcceptUI()
     {
-        
+        canMove = false;
         currentPlayer = gameManager.GetCurrentPlayer();
         playerNumberText.text = "Player " + currentPlayer + "'s turn!";
         turnAcceptUI.gameObject.SetActive(true);
@@ -175,13 +194,15 @@ public class TurnManager : MonoBehaviour
 
     public void EnableTurnPassUI()
     {
+        canMove = false;
         currentPlayer = gameManager.GetCurrentPlayer();
-        playerPassText.text = "Player " + currentPlayer + " has no cards \nand is forced to pass...";
+        playerPassText.text = "Player " + currentPlayer + " ain't got no \ncards and has to pass!";
         turnPassUI.gameObject.SetActive(true);
     }
 
     public void DisableTurnPassUI()
     {
+        canMove = false;
         turnPassUI.gameObject.SetActive(false);
     }
 }

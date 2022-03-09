@@ -24,6 +24,7 @@ public class UpdateSprite : MonoBehaviour
         {
             if (this.name == card)
             {
+                Debug.Log(card);
                 cardFace = gameManager.GetCardFaceAtIndex(i);
                 break;
             }

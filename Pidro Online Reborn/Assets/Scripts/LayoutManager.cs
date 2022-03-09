@@ -19,7 +19,7 @@ public class LayoutManager : MonoBehaviour
     [Space(20)]
 
     [Header("Misc Transforms")]
-    public Transform deck;
+    public GameObject deck;
     
 
 
@@ -98,6 +98,33 @@ public class LayoutManager : MonoBehaviour
 
     public void Update ()
     {
+    }
+
+    public void ChangeDealer(int player)
+    {
+        switch(player)
+        {
+            case 1:
+                deck.transform.parent = player1_hand_area.transform;
+                deck.transform.localPosition = new Vector3(-470.109955f,-0.000213623047f,-4860.1084f);
+                deck.transform.rotation = Quaternion.Euler(0,0,0);
+                break;
+            case 2:
+                deck.transform.parent = player2_hand_area.transform;
+                deck.transform.localPosition = new Vector3(-470.109955f,-0.000213623047f,-4860.1084f);
+                deck.transform.rotation = Quaternion.Euler(0,0,0);
+                break;
+            case 3:
+                deck.transform.parent = player3_hand_area.transform;
+                deck.transform.localPosition = new Vector3(-470.109955f,-0.000213623047f,-4860.1084f);
+                deck.transform.rotation = Quaternion.Euler(0,0,0);
+                break;
+            case 4:
+                deck.transform.parent = player4_hand_area.transform;
+                deck.transform.localPosition = new Vector3(-470.109955f,-0.000213623047f,-4860.1084f);
+                deck.transform.rotation = Quaternion.Euler(0,0,0);
+                break;
+        }
     }
 
     public void Player1Turn()

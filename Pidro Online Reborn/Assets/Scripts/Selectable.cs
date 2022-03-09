@@ -113,7 +113,6 @@ public class Selectable : MonoBehaviour
         {
             transform.position = startPosition;
             transform.SetParent(startParent.transform, false);
-
         }
         transform.rotation = startRotation;
 
@@ -122,6 +121,8 @@ public class Selectable : MonoBehaviour
 
         gameManager.currentPlayer_hand = gameManager.SortCardsList(gameManager.currentPlayer_hand);
         gameManager.SortCardsGameObjects(gameManager.currentPlayer_hand, gameManager.currentPlayer_hand_area);
+
+        gameManager.UpdateCurrentPlayerLists(gameManager.GetCurrentPlayer());
     }
 
     private Vector3 GetMousePos()
