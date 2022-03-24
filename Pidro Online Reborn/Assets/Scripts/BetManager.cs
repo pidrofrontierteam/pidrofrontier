@@ -233,17 +233,22 @@ public class BetManager : MonoBehaviour
 
     private void UpdateSlider()
     {
-        // betSlider.minValue = minBet;
         sliderValue = (int)betSlider.value;
         betValue.text = sliderValue.ToString();
     }
 
-    private void UpdateSliderMin()
+    public void UpdateSliderMin()
     {
         if(minBet != 14)
             betSlider.minValue = minBet + 1;
         else
             betSlider.minValue = minBet;
+    }
+
+    public void ResetMinBet()
+    {
+         betSlider.minValue = betSlider.value = sliderValue = minBet = 6;
+        //  UpdateSlider();
     }
 
     public void UpdateMinBet(int value)

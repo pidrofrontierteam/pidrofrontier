@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Linq;
 
 public enum GameState {
@@ -52,7 +53,6 @@ public enum GameState {
     TurnPlayer4End,
 
     RoundEnd,
-    CalculateWinner,
     MatchEnd
 }
 
@@ -72,15 +72,19 @@ public class GameManager : MonoBehaviour
     public int dealer;
     public int redTeamPoints = 0;
     public int blueTeamPoints = 0;
-    public bool isRoundOver = false;
+    public bool isDeckOver = false;
     public bool redTeamHighestBet = false;
     public bool blueTeamHighestBet = false;
     public bool redPlay2 = false;
     public bool bluePlay2 = false;
+    public int roundTotalPoints = 0;
     [Range(0.1f, 1f)]
     public float waitTime = 0.5f;
 
     [Space(20)] 
+
+    private bool redWon = false;
+    private bool blueWon = false;
 
     [Header("Card GameObject")]
     public Sprite[] cardFaces;
@@ -140,6 +144,8 @@ public class GameManager : MonoBehaviour
     private List<string> sortedDeck;
 
     public List<string> roundCardsPlayed;
+    public List<string> roundCardsPlayedByRed;
+    public List<string> roundCardsPlayedByBlue;
     public List<string> deckCardsPlayed;
     
     [Header("Current Player's Information")]
@@ -164,6 +170,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Text blueTeamPointsText;
     [SerializeField] private Text teamBetText;
     [SerializeField] private Text betValueText;
+
+    [SerializeField] private Transform winPanel;
+    [SerializeField] private Text colorTeam;
+    [SerializeField] private Button playAgainButton;
+    [SerializeField] private Button quitButton;
 
 
     private bool isBetting = false;
@@ -190,6 +201,7 @@ public class GameManager : MonoBehaviour
     {
         teamBetText.text = "";
         betValueText.text = "";
+        
         cardFaces = Resources.LoadAll<Sprite>("English_pattern_playing_cards_deck");
 
         UpdateGameState(GameState.MatchStart);
@@ -329,9 +341,8 @@ public class GameManager : MonoBehaviour
             case GameState.RoundEnd:
                 HandleRoundEnd();
                 break;
-            case GameState.CalculateWinner:
-                break;
             case GameState.MatchEnd:
+                HandleMatchEnd();
                 break;
         }
 
@@ -343,7 +354,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleMatchStart()
     {
-        Debug.Log("===HANDLE MATCH START===");
         // Create the deck from which we draw cards
         deck = GenerateDeck();
 
@@ -358,25 +368,20 @@ public class GameManager : MonoBehaviour
 
     public void HandleFirstDraw()
     {
-        Debug.Log("===HANDLE FIRST DRAW===");
         Shuffle(deck);
         betIndex = 1;
 
         for (int i = 0; i < 3; i++)
             {
-                //Debug.Log("Dealt 3 cards to player 1");
                 DrawCards(3, player1_hand, player1_hand_area);
                 ShowPlayer1Cards(false);
 
-                //Debug.Log("Dealt 3 cards to player 2");
                 DrawCards(3, player2_hand, player2_hand_area);
                 ShowPlayer2Cards(false);
 
-                //Debug.Log("Dealt 3 cards to player 3");
                 DrawCards(3, player3_hand, player3_hand_area);
                 ShowPlayer3Cards(false);
 
-                //Debug.Log("Dealt 3 cards to player 4");
                 DrawCards(3, player4_hand, player4_hand_area);
                 ShowPlayer4Cards(false);
             }
@@ -415,8 +420,9 @@ public class GameManager : MonoBehaviour
         
         int order = DeterminePlayerOrder();
 
+        // reset minimum bet between rounds
+        betManager.ResetMinBet();
         
-
         switch (order) {
             case 1:
                 UpdateGameState(GameState.BetPlayer1Accept);
@@ -435,7 +441,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer1Accept()
     {
-        Debug.Log("===HANDLE BET PLAYER 1 ACCEPT===");
         currentPlayer = 1;
         layoutManager.Player1Turn();
         betManager.EnableBetAcceptUI();
@@ -443,7 +448,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer1Start()
     {
-        Debug.Log("===HANDLE BET PLAYER 1===");
         ShowPlayer1Cards(true);
         betManager.EnableBettingUI();
     }
@@ -465,7 +469,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer2Accept()
     {
-        Debug.Log("===HANDLE BET PLAYER 2 ACCEPT===");
         currentPlayer = 2;
         layoutManager.Player2Turn();
         betManager.EnableBetAcceptUI();
@@ -473,7 +476,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer2Start()
     {
-        Debug.Log("===HANDLE BET PLAYER 2===");
         ShowPlayer2Cards(true);
         betManager.EnableBettingUI();
     }
@@ -495,7 +497,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer3Accept()
     {
-        Debug.Log("===HANDLE BET PLAYER 3 ACCEPT===");
         currentPlayer = 3;
         layoutManager.Player3Turn();
         betManager.EnableBetAcceptUI();
@@ -503,7 +504,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer3Start()
     {
-        Debug.Log("===HANDLE BET PLAYER 3===");
         ShowPlayer3Cards(true);
         betManager.EnableBettingUI();
     }
@@ -525,7 +525,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer4Accept()
     {
-        Debug.Log("===HANDLE BET PLAYER 4 ACCEPT===");
         currentPlayer = 4;
         layoutManager.Player4Turn();
         betManager.EnableBetAcceptUI();
@@ -533,7 +532,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleBetPlayer4Start()
     {
-        Debug.Log("===HANDLE BET PLAYER 4===");
         ShowPlayer4Cards(true);
         betManager.EnableBettingUI();
     }
@@ -555,8 +553,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleChooseSuitAccept()
     {
-        Debug.Log("===HANDLE CHOOSE SUIT ACCEPT===");
-        
         if(player1_bet == 0 && player2_bet == 0 && player3_bet == 0 && player4_bet == 0)
         {
             switch(dealer)
@@ -596,7 +592,6 @@ public class GameManager : MonoBehaviour
             }
         } else {
            int highest = GetHighestBet(); 
-           Debug.Log(highest);
 
            if (player1_bet == highest || highest14 == 1)
            {
@@ -651,13 +646,11 @@ public class GameManager : MonoBehaviour
 
     public void HandleChooseSuit()
     {
-        Debug.Log("===HANDLE CHOOSE SUIT===");
         betManager.EnableSuitSelectionUI();
     }
 
     public IEnumerator HandleFirstDiscard()
     {
-        Debug.Log("===HANDLE FIRST DISCARD===");
         Debug.Log("Discarding p1");
         currentPlayer_hand = player1_hand;
         currentPlayer_hand_area = player1_hand_area;
@@ -687,8 +680,6 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator HandleSecondDraw()
     {
-        Debug.Log("===HANDLE SECOND DRAW===");
-
         //TODO: Dealer gets all remaining cards.
 
 
@@ -792,7 +783,6 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator HandleSecondDiscard()
     {
-        Debug.Log("===HANDLE SECOND DISCARD===");
         //TODO: Dealer does not discard unsuited cards, and always keeps 6. Unsuited card values don't matter.
 
         int failSafe = 0;
@@ -881,7 +871,6 @@ public class GameManager : MonoBehaviour
         currentPlayer_hand = player1_hand;
         currentPlayer_hand_area = player1_hand_area;
 
-        Debug.Log("===HANDLE TURN PLAYER 1 ACCEPT===");
         currentPlayer = 1;
         layoutManager.Player1Turn();
         turnManager.EnableTurnAcceptUI();
@@ -897,7 +886,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleTurnPlayer1Start()
     {
-        Debug.Log("===HANDLE TURN PLAYER 1 START===");
         if(player1_hand.Count() > 0)
         {
             ShowPlayer1Cards(true);
@@ -911,10 +899,11 @@ public class GameManager : MonoBehaviour
 
     public void HandleTurnPlayer1End()
     {
-        Debug.Log("===HANDLE TURN PLAYER 1 END===");
         turnManager.SetHasAccepted(false);
         ShowPlayer1Cards(false);
         // NEXT TURN
+        redTeamPointsText.text = redTeamPoints + " points";
+        blueTeamPointsText.text = blueTeamPoints + " points";
         if (turnIndex < 4)
         {
             turnIndex++;
@@ -934,7 +923,6 @@ public class GameManager : MonoBehaviour
         currentPlayer_hand = player2_hand;
         currentPlayer_hand_area = player2_hand_area;
 
-        Debug.Log("===HANDLE TURN PLAYER 2 ACCEPT===");
         currentPlayer = 2;
         layoutManager.Player2Turn();
         turnManager.EnableTurnAcceptUI();
@@ -950,7 +938,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleTurnPlayer2Start()
     {
-        Debug.Log("===HANDLE TURN PLAYER 2 START===");
         if(player2_hand.Count() > 0)
         {
             ShowPlayer2Cards(true);
@@ -965,9 +952,10 @@ public class GameManager : MonoBehaviour
     public void HandleTurnPlayer2End()
     {
         turnManager.SetHasAccepted(false);
-        Debug.Log("===HANDLE TURN PLAYER 2 END===");
         ShowPlayer2Cards(false);
         // NEXT TURN
+        redTeamPointsText.text = redTeamPoints + " points";
+        blueTeamPointsText.text = blueTeamPoints + " points";
         if (turnIndex < 4)
         {
             turnIndex++;
@@ -987,7 +975,6 @@ public class GameManager : MonoBehaviour
         currentPlayer_hand = player3_hand;
         currentPlayer_hand_area = player3_hand_area;
 
-        Debug.Log("===HANDLE TURN PLAYER 3 ACCEPT===");
         currentPlayer = 3;
         layoutManager.Player3Turn();
         turnManager.EnableTurnAcceptUI();
@@ -1003,7 +990,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleTurnPlayer3Start()
     {
-        Debug.Log("===HANDLE TURN PLAYER 3 START===");
         if(player3_hand.Count() > 0)
         {
             ShowPlayer3Cards(true);
@@ -1018,9 +1004,10 @@ public class GameManager : MonoBehaviour
     public void HandleTurnPlayer3End()
     {
         turnManager.SetHasAccepted(false);
-        Debug.Log("===HANDLE TURN PLAYER 3 END===");
         ShowPlayer3Cards(false);
         // NEXT TURN
+        redTeamPointsText.text = redTeamPoints + " points";
+        blueTeamPointsText.text = blueTeamPoints + " points";
         if (turnIndex < 4)
         {
             turnIndex++;
@@ -1040,7 +1027,6 @@ public class GameManager : MonoBehaviour
         currentPlayer_hand = player4_hand;
         currentPlayer_hand_area = player4_hand_area;
 
-        Debug.Log("===HANDLE TURN PLAYER 4 ACCEPT===");
         currentPlayer = 4;
         layoutManager.Player4Turn();
         turnManager.EnableTurnAcceptUI();
@@ -1056,7 +1042,6 @@ public class GameManager : MonoBehaviour
 
     public void HandleTurnPlayer4Start()
     {
-        Debug.Log("===HANDLE TURN PLAYER 4 START===");
         if(player4_hand.Count() > 0)
         {
             ShowPlayer4Cards(true);
@@ -1071,9 +1056,10 @@ public class GameManager : MonoBehaviour
     public void HandleTurnPlayer4End()
     {
         turnManager.SetHasAccepted(false);
-        Debug.Log("===HANDLE TURN PLAYER 4 END===");
         ShowPlayer4Cards(false);
         // NEXT TURN
+        redTeamPointsText.text = redTeamPoints + " points";
+        blueTeamPointsText.text = blueTeamPoints + " points";
         if (turnIndex < 4)
         {
             turnIndex++;
@@ -1089,7 +1075,7 @@ public class GameManager : MonoBehaviour
 
     public void HandleRoundEnd()
     {
-        Debug.Log("===HANDLE ROUND END===");
+
         // calculate points
         int pointsToAward = 0;
         int pointsForCheck = 0;
@@ -1100,16 +1086,40 @@ public class GameManager : MonoBehaviour
             {
                 pointsToAward += GetCardPoints(card);
             }
+
+        
+        if(redTeamHighestBet)
+        {
+            foreach(string redcard in roundCardsPlayedByRed)            
+            {
+                if(GetCardRank(redcard) != 0 && !deckCardsPlayed.Contains(redcard))
+                {
+                    pointsForCheck += GetCardPoints(redcard);
+                }
+            }
+        } else if(blueTeamHighestBet)
+        {
+            foreach(string bluecard in roundCardsPlayedByBlue)
+            {
+                if(GetCardRank(bluecard) != 0 && !deckCardsPlayed.Contains(bluecard))
+                {
+                    pointsForCheck += GetCardPoints(bluecard);
+                }
+            }
+        }
+
             // add points of all cards, including the 2, for checking if points >= round's bet
+
+
         }
         Debug.Log(pointsToAward + " to award this round");
 
         // Checks whether round is over or not
         if(player1_hand.Count == 0 && player2_hand.Count == 0 && player3_hand.Count == 0 && player4_hand.Count == 0)
         {
-            isRoundOver = true;
+            isDeckOver = true;
         } else {
-            isRoundOver = false;
+            isDeckOver = false;
         }
 
         int highestCard = GetHighestPlayedCard();
@@ -1166,51 +1176,54 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("player 1 win");
             redTeamPoints += pointsToAward;
-            redTeamPointsText.text = redTeamPoints + " points";
-            blueTeamPointsText.text = blueTeamPoints + " points";
             CheckForWinner();
             ResetPlayedCardRanks();
-            if(isRoundOver)
+            if(isDeckOver)
             {
+
                 // new Deck, dealer++, new bets
                 foreach(string card in deckCardsPlayed)
                 {
                     pointsToAward += GetCardPoints(card);
                 }
                 PenaltyCheckRed(pointsForCheck, pointsToAward, roundBet, redPlay2, bluePlay2);
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
                 IncrementDealer();
                 Reset();
                 UpdateGameState(GameState.FirstDraw);
+
             }
             else 
             {
-                minBet = 6;
-                betManager.UpdateMinBet(minBet);
                 ResetPlayedCards();
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
                 UpdateGameState(GameState.TurnPlayer1Accept);
+                
             }
         }
         else if(highestCard == player2_playedCardRank)
         {
             Debug.Log("player 2 win");
             blueTeamPoints += pointsToAward;
-            redTeamPointsText.text = redTeamPoints + " points";
-            blueTeamPointsText.text = blueTeamPoints + " points";
             CheckForWinner();
             ResetPlayedCardRanks();
-            if(isRoundOver)
+            if(isDeckOver)
             {
                 // new Deck, dealer++, new bets
                 PenaltyCheckBlue(pointsForCheck, pointsToAward, roundBet, redPlay2, bluePlay2);
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
                 IncrementDealer();
                 Reset();
                 UpdateGameState(GameState.FirstDraw);
             }
             else 
             {
-                minBet = 6;
-                betManager.UpdateMinBet(minBet);
                 ResetPlayedCards();
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
                 UpdateGameState(GameState.TurnPlayer2Accept);
             }
         }
@@ -1218,23 +1231,23 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("player 3 win");
             redTeamPoints += pointsToAward;
-            redTeamPointsText.text = redTeamPoints + " points";
-            blueTeamPointsText.text = blueTeamPoints + " points";
             CheckForWinner();
             ResetPlayedCardRanks();
-            if(isRoundOver)
+            if(isDeckOver)
             {
                 // new Deck, dealer++, new bets
                 PenaltyCheckRed(pointsForCheck, pointsToAward, roundBet, redPlay2, bluePlay2);
                 IncrementDealer();
                 Reset();
                 UpdateGameState(GameState.FirstDraw);
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
             }
             else 
             {
-                minBet = 6;
-                betManager.UpdateMinBet(minBet);
                 ResetPlayedCards();
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
                 UpdateGameState(GameState.TurnPlayer3Accept);
             }
         }
@@ -1242,14 +1255,14 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("player 4 win");
             blueTeamPoints += pointsToAward;
-            redTeamPointsText.text = redTeamPoints + " points";
-            blueTeamPointsText.text = blueTeamPoints + " points";
             CheckForWinner();
             ResetPlayedCardRanks();
-            if(isRoundOver)
+            if(isDeckOver)
             {
                 // new Deck, dealer++, new bets
                 PenaltyCheckBlue(pointsForCheck, pointsToAward, roundBet, redPlay2, bluePlay2);
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
                 IncrementDealer();
                 Reset();
                 UpdateGameState(GameState.FirstDraw);
@@ -1257,19 +1270,22 @@ public class GameManager : MonoBehaviour
             else 
             {
                 ResetPlayedCards();
-                minBet = 6;
-                betManager.UpdateMinBet(minBet);
+                redTeamPointsText.text = redTeamPoints + " points";
+                blueTeamPointsText.text = blueTeamPoints + " points";
                 UpdateGameState(GameState.TurnPlayer4Accept);
             }
         }
-        // if someone reached 62 points
-            // end match
-        // else if no cards remain
-            // NEW DECK
-            // next player is dealer
-        // else
-            // NEW ROUND
-            // DetermineNextRoundOrder();
+    }
+
+    public void HandleMatchEnd()
+    {
+        if(redWon)
+        {
+            SceneManager.LoadScene("RedWinGame");
+        } else if (blueWon)
+        {
+            SceneManager.LoadScene("BlueWinGame");
+        }
     }
 
     #endregion GameStateHandling
@@ -1287,76 +1303,60 @@ public class GameManager : MonoBehaviour
 
     public void PenaltyCheckRed(int pointsCheck, int pointsAward, int bet, bool red2, bool blue2)
     {
-        Debug.Log("Penalty check for red: " + pointsCheck + "pointsCheck " + pointsAward + "pointsAward" + bet + "bet " + red2 + "redBool " + blue2 + "bluebool");
-        // if(pointsCheck >= bet)
-        // {
-        //     if(redTeamHighestBet)
-        //     {
-        //         redTeamPoints += pointsAward;
-        //     }
-        //     if(blueTeamHighestBet)
-        //     {
-        //         redTeamPoints += pointsAward;
-        //     }
-        // }
-        // else 
+        Debug.Log("Penalty check for red: " + "| Red bet highest: " + redTeamHighestBet + "|" + pointsCheck + " pointsCheck |" + pointsAward + " pointsAward |" + bet + " bet |" + red2 + " redBool |" + blue2 + " bluebool |");
         if(pointsCheck < bet)
         {
+            Debug.Log("reference points less than bet");
             if(redTeamHighestBet)
             {
+                Debug.Log("red team bet highest");
                 redTeamPoints -= bet;
                 if(red2)
                 {
+                    Debug.Log("red played a 2");
                     redTeamPoints--;
                     redPlay2 = false;
                 }
-            }
-            if(blueTeamHighestBet)
+            } 
+            else if(blueTeamHighestBet)
             {
+                Debug.Log("blue team bet highest");
                 blueTeamPoints -= bet;
                 if(blue2)
                 {
+                    Debug.Log("blue played a 2");
                     blueTeamPoints--;
                     bluePlay2 = false;
                 }
-                // redTeamPoints += pointsAward;
             }
         }
     }
 
     public void PenaltyCheckBlue(int pointsCheck, int pointsAward, int bet, bool red2, bool blue2)
     {
-        Debug.Log("Penalty check for blue: " + pointsCheck + "pointsCheck " + pointsAward + "pointsAward" + bet + "bet " + red2 + "redBool " + blue2 + "bluebool");
-        // if(pointsCheck >= bet)
-        // {
-        //     if(redTeamHighestBet)
-        //     {
-        //         blueTeamPoints += pointsAward;
-        //     }
-        //     if(blueTeamHighestBet)
-        //     {
-        //         blueTeamPoints += pointsAward;
-        //     }
-        // }
-        // else 
+        Debug.Log("Penalty check for blue: " + "| Blue bet highest: " + blueTeamHighestBet + "|" + pointsCheck + " pointsCheck |" + pointsAward + " pointsAward |" + bet + " bet |" + red2 + " redBool |" + blue2 + " bluebool |");
         if(pointsCheck < bet)
         {
+            Debug.Log("reference points less than bet");
             if(redTeamHighestBet)
             {
+                Debug.Log("red team bet highest");
                 redTeamPoints -= bet;
+
                 if(red2)
                 {
+                    Debug.Log("red played a 2");
                     redTeamPoints--;
                     redPlay2 = false;
                 }
-                // blueTeamPoints += pointsAward;
-
-            }
-            if(blueTeamHighestBet)
+            } 
+            else if(blueTeamHighestBet)
             {
+                Debug.Log("blue team bet highest");
                 blueTeamPoints -= bet;
                 if(blue2)
                 {
+                    Debug.Log("blue played a 2");
                     blueTeamPoints--;
                     bluePlay2 = false;
                 }
@@ -1664,25 +1664,30 @@ public class GameManager : MonoBehaviour
         // if red team == 62 points and blue != 62 points
         if(CheckGameOver(redTeamPoints) && (!(CheckGameOver(blueTeamPoints))))
         {
-            Debug.Log("Red team won!");
+            redWon = true;
+            blueWon = false;
         } 
         // if blue team == 62 points and red != 62 points
         else if ((!(CheckGameOver(redTeamPoints)) && (CheckGameOver(blueTeamPoints))))
         {
-            Debug.Log("Blue team won!");
+            blueWon = true;
+            redWon = false;
         } 
         //if red team AND blue team == 62 points
         else if(CheckGameOver(redTeamPoints) && (CheckGameOver(blueTeamPoints)))
         {
             if(redTeamHighestBet)
             {
-                Debug.Log("Red team won due to betting higher!");
+                blueWon = false;
+                redWon = true;
             }
             else if (blueTeamHighestBet)
             {
-                Debug.Log("Blue team won due to betting higher!");
+                blueWon = true;
+                redWon = false;
             }
         }
+        UpdateGameState(GameState.MatchEnd);
     }
 
     public void Reset()
@@ -1695,7 +1700,10 @@ public class GameManager : MonoBehaviour
         discard.Clear();
         hasSprite.Clear();
         roundCardsPlayed.Clear();
+        roundCardsPlayedByBlue.Clear();
+        roundCardsPlayedByRed.Clear();
         deckCardsPlayed.Clear();
+        
 
         player1_field.Clear();
         player1_hand.Clear();
@@ -1728,7 +1736,7 @@ public class GameManager : MonoBehaviour
             if(card.gameObject.tag != "deck")
                 Destroy(card.gameObject);
             else
-                Debug.Log("found deck!, doing nothing!!! X))))");
+                continue;
         }
     }
 
@@ -1758,6 +1766,16 @@ public class GameManager : MonoBehaviour
     public void PlayedCard(string card)
     {
         roundCardsPlayed.Add(card);
+    }
+
+    public void RedPlayedCard(string card)
+    {
+        roundCardsPlayedByRed.Add(card);
+    }
+
+    public void BluePlayedCard(string card)
+    {
+        roundCardsPlayedByBlue.Add(card);
     }
 
     public void ResetPlayedCards()
@@ -1790,11 +1808,6 @@ public class GameManager : MonoBehaviour
     public int GetMinBet()
     {
         return minBet;
-    }
-
-    public void DebugPrint()
-    {
-        Debug.Log("all my homies hate putin");
     }
 
     public int GetHighestBet()
@@ -1939,6 +1952,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
+
+    public bool GetRedBetHighest()
+    {
+        return redTeamHighestBet;
+    }
+
+    public bool GetBlueBetHighest()
+    {
+        return blueTeamHighestBet;
+    }    
+
     public int DeterminePlayerOrder()
     {
         Debug.Log("firstPlayerIndex: " + firstPlayerIndex);
@@ -2027,4 +2051,16 @@ public class GameManager : MonoBehaviour
         }
         
     }
+
+    public void OnPlayAgainClick()
+    {
+        SceneManager.LoadScene("GameScene");
+    }
+
+    public void OnQuitClick()
+    {
+        Application.Quit();
+    }
+
+
 }

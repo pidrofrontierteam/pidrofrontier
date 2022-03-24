@@ -10,6 +10,8 @@ public class Selectable : MonoBehaviour
     private bool isOverdropZone;
     private bool isOverHand;
 
+    public bool played = false;
+
     [SerializeField] private Vector2 startPosition;
     [SerializeField] private Quaternion startRotation;
 
@@ -57,17 +59,19 @@ public class Selectable : MonoBehaviour
 
     private void OnMouseDown()
     {
-        dragOffset = transform.position - GetMousePos();
-        startParent = transform.parent.gameObject;
-        Debug.Log(startParent);
-        startPosition = transform.position;
-        startRotation = transform.rotation;
+        if(!played)
+        {
+            dragOffset = transform.position - GetMousePos();
+            startParent = transform.parent.gameObject;
+            startPosition = transform.position;
+            startRotation = transform.rotation;
+        }
     }
 
     public void OnMouseDrag()
     {
-        // Check if card belongs to current player
-        if(turnManager.canMove && startParent.transform.transform.name == gameManager.currentPlayer_hand_area.transform.name || startParent.transform.transform.name == gameManager.currentPlayer_field_area.transform.name)
+        // Check if card belongs to current player and hasn't been played
+        if(!played && turnManager.canMove && startParent.transform.transform.name == gameManager.currentPlayer_hand_area.transform.name || startParent.transform.transform.name == gameManager.currentPlayer_field_area.transform.name)
         {
             transform.position = Vector3.MoveTowards(transform.position, GetMousePos() + dragOffset, dragSpeed * Time.deltaTime);
             transform.SetParent(Canvas.transform, true);
@@ -76,53 +80,56 @@ public class Selectable : MonoBehaviour
 
     private void OnMouseUp()
     {
-        // Checks whether the cursor is above the drop zone (field) when released, if so it puts the card gameobject into the drop zone and manages the string lists
-        if (isOverdropZone)
+        if(!played)
         {
-            // CHECK WHETHER POSSIBLE TO ADD CARDS, I.E., HAVE WE PLAYED A CARD THIS ROUND?
-            if(turnManager.playedCards >= gameManager.currentPlayer_field.Count)
+            // Checks whether the cursor is above the drop zone (field) when released, if so it puts the card gameobject into the drop zone and manages the string lists
+            if (isOverdropZone)
             {
-                transform.SetParent(dropZone.transform, false);
-
-                // Checks whether card is already in the field
-                string result = gameManager.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
-                if (result == null)
+                // CHECK WHETHER POSSIBLE TO ADD CARDS, I.E., HAVE WE PLAYED A CARD THIS ROUND?
+                if(turnManager.playedCards >= gameManager.currentPlayer_field.Count)
                 {
-                    gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_hand, gameManager.currentPlayer_field);
+                    transform.SetParent(dropZone.transform, false);
+
+                    // Checks whether card is already in the field
+                    string result = gameManager.currentPlayer_field.FirstOrDefault(s => s.Contains(transform.gameObject.name));
+                    if (result == null)
+                    {
+                        gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_hand, gameManager.currentPlayer_field);
+                    }
+                }
+                else
+                {
+                    transform.position = startPosition;
+                    transform.SetParent(startParent.transform, false);
                 }
             }
-            else
+            // Checks whether the cursor is above the hand when released, if so it puts the card gameobject into the hand and manages the string lists
+            else if (isOverHand)
+            {
+                transform.SetParent(hand.transform, false);
+
+                // Checks whether card is already in the hand
+                string result = gameManager.currentPlayer_hand.FirstOrDefault(s => s.Contains(transform.gameObject.name));
+                if (result == null)
+                {
+                    gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_field, gameManager.currentPlayer_hand);
+                }
+            } 
+            else 
             {
                 transform.position = startPosition;
                 transform.SetParent(startParent.transform, false);
             }
+            transform.rotation = startRotation;
+
+            gameManager.currentPlayer_field = gameManager.SortCardsList(gameManager.currentPlayer_field);
+            gameManager.SortCardsGameObjects(gameManager.currentPlayer_field, gameManager.currentPlayer_field_area);
+
+            gameManager.currentPlayer_hand = gameManager.SortCardsList(gameManager.currentPlayer_hand);
+            gameManager.SortCardsGameObjects(gameManager.currentPlayer_hand, gameManager.currentPlayer_hand_area);
+
+            gameManager.UpdateCurrentPlayerLists(gameManager.GetCurrentPlayer());
         }
-        // Checks whether the cursor is above the hand when released, if so it puts the card gameobject into the hand and manages the string lists
-        else if (isOverHand)
-        {
-            transform.SetParent(hand.transform, false);
-
-            // Checks whether card is already in the hand
-            string result = gameManager.currentPlayer_hand.FirstOrDefault(s => s.Contains(transform.gameObject.name));
-            if (result == null)
-            {
-                gameManager.MoveCardBetweenLists(transform.gameObject.name, gameManager.currentPlayer_field, gameManager.currentPlayer_hand);
-            }
-        } 
-        else 
-        {
-            transform.position = startPosition;
-            transform.SetParent(startParent.transform, false);
-        }
-        transform.rotation = startRotation;
-
-        gameManager.currentPlayer_field = gameManager.SortCardsList(gameManager.currentPlayer_field);
-        gameManager.SortCardsGameObjects(gameManager.currentPlayer_field, gameManager.currentPlayer_field_area);
-
-        gameManager.currentPlayer_hand = gameManager.SortCardsList(gameManager.currentPlayer_hand);
-        gameManager.SortCardsGameObjects(gameManager.currentPlayer_hand, gameManager.currentPlayer_hand_area);
-
-        gameManager.UpdateCurrentPlayerLists(gameManager.GetCurrentPlayer());
     }
 
     private Vector3 GetMousePos()

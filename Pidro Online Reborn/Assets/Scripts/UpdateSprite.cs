@@ -24,7 +24,6 @@ public class UpdateSprite : MonoBehaviour
         {
             if (this.name == card)
             {
-                Debug.Log(card);
                 cardFace = gameManager.GetCardFaceAtIndex(i);
                 break;
             }
@@ -39,7 +38,11 @@ public class UpdateSprite : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(selectable.faceUp == true)
+        if(!selectable)
+        {
+            // do nothing
+        } 
+        else if(selectable.faceUp == true)
         {
             spriteRenderer.sprite = cardFace;
         }

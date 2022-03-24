@@ -101,10 +101,21 @@ public class TurnManager : MonoBehaviour
 
         foreach(string card in gameManager.currentPlayer_field)
         {
+            GameObject.Find(card).GetComponent<Selectable>().played = true;
             if(!(gameManager.deckCardsPlayed.Contains(card)))
             {
 
                 gameManager.PlayedCard(card);
+
+                if(currentPlayer == 1 || currentPlayer == 3)
+                {
+                    gameManager.RedPlayedCard(card);
+                } else if (currentPlayer == 2 || currentPlayer == 4)
+                {
+                    gameManager.BluePlayedCard(card);
+                }
+
+
                 switch(currentPlayer)
                 {
                     case 1:
